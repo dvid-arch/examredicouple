@@ -1,0 +1,131 @@
+
+import mongoose from 'mongoose';
+import bcrypt from 'bcryptjs';
+
+const userSchema = new mongoose.Schema({
+    name: { type: String, required: true }, // Changed from username to name to match frontend
+    password: { type: String, required: false }, // Optional for OAuth users
+    email: { type: String, unique: true, sparse: true }, // Optional for now
+    googleId: { type: String, unique: true, sparse: true },
+    subscription: { type: String, enum: ['free', 'pro'], default: 'free' },
+    subscriptionExpiry: { type: Date }, // For Day Pass and expiring Pro plans
+    referralCode: { type: String, unique: true, sparse: true },
+    referredBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    role: { type: String, enum: ['user', 'admin'], default: 'user' },
+    preferredSubjects: { type: [String], default: [] },
+    photoURL: { type: String },
+
+    // AI & Subscription
+    aiCredits: { type: Number, default: 0 },
+    dailyMessageCount: { type: Number, default: 0 },
+    lastMessageDate: { type: String }, // Format: YYYY-MM-DD
+
+    studyPlan: {
+        targetScore: { type: Number, default: 250 },
+        weakSubjects: { type: [String], default: [] },
+        dailyGoal: { type: Number, default: 10 },
+        examDate: { type: Date }
+    },
+    streak: {
+        current: { type: Number, default: 0 },
+        longest: { type: Number, default: 0 },
+        lastDate: { type: Date },
+        history: [{ type: String }] // Array of 'YYYY-MM-DD' strings
+    },
+    recentActivity: [{
+        id: String,
+        type: { type: String, enum: ['quiz', 'guide', 'game'] },
+        title: String,
+        path: String,
+        state: mongoose.Schema.Types.Mixed,
+        score: Number,
+        maxScore: Number,
+        progress: Number,
+        subtitle: String,
+        mastered: { type: Boolean, default: false },
+        timestamp: { type: Date, default: Date.now }
+    }],
+    engagement: {
+        dismissedNudges: { type: [String], default: [] },
+        unlockedNudges: { type: [String], default: [] },
+        nudgeDismissalTimes: {
+            type: Map,
+            of: Date,
+            default: {}
+        }
+    },
+    isVerified: { type: Boolean, default: false },
+    verificationToken: String,
+    resetPasswordToken: String,
+    resetPasswordExpire: Date,
+    studyProgress: {
+        type: Map,
+        of: {
+            confidence: { type: String, enum: ['lost', 'shaky', 'confident'] },
+            subject: { type: String },
+            lastReviewed: { type: Date, default: Date.now }
+        },
+        default: {}
+    },
+    estimatedScore: { type: Number, default: 150 },
+    activeSessions: [{
+        sessionId: { type: String, required: true },
+        device: { type: String },
+        ip: { type: String },
+        lastActive: { type: Date, default: Date.now }
+    }]
+}, {
+    timestamps: true
+});
+
+// Method to compare passwords
+userSchema.methods.matchPassword = async function (enteredPassword) {
+    return await bcrypt.compare(enteredPassword, this.password);
+};
+
+// Pre-save hook to hash password
+userSchema.pre('save', async function () {
+    if (!this.isModified('password') || !this.password) {
+        return;
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    this.password = await bcrypt.hash(this.password, salt);
+});
+
+import crypto from 'crypto';
+
+// ... (previous code)
+
+// Generate Password Reset Token
+userSchema.methods.getResetPasswordToken = function () {
+    // Generate token
+    const resetToken = crypto.randomBytes(20).toString('hex');
+
+    // Hash token and set to resetPasswordToken field
+    this.resetPasswordToken = crypto
+        .createHash('sha256')
+        .update(resetToken)
+        .digest('hex');
+
+    // Set expire (10 minutes)
+    this.resetPasswordExpire = Date.now() + 10 * 60 * 1000;
+
+    return resetToken;
+};
+
+// Generate Email Verification Token
+userSchema.methods.getVerificationToken = function () {
+    const verificationToken = crypto.randomBytes(20).toString('hex');
+
+    this.verificationToken = crypto
+        .createHash('sha256')
+        .update(verificationToken)
+        .digest('hex');
+
+    return verificationToken;
+};
+
+const User = mongoose.model('User', userSchema);
+
+export default User;
