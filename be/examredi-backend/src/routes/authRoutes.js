@@ -23,7 +23,8 @@ const router = express.Router();
 // Google OAuth Routes
 router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
 router.get('/google/callback', passport.authenticate('google', { session: false }), async (req, res) => {
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    let frontendUrl = process.env.FRONTEND_URL || 'https://examredicouple.onrender.com';
+    if (frontendUrl.endsWith('/')) frontendUrl = frontendUrl.slice(0, -1);
 
     if (!req.user) {
         return res.redirect(`${frontendUrl}/login?error=auth_failed`);
