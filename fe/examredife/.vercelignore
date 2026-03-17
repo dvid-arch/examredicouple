@@ -1,0 +1,29 @@
+# Dependencies
+node_modules
+
+# Build outputs (don't ignore these - Vercel needs to build them)
+# dist
+# dist-ssr
+
+# Development
+.vscode
+.idea
+.env.local
+.env.*.local
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Git
+.git
+.gitignore
+
+# Server folder (local only)
+server
+
+# Test files
+*.test.ts
+*.spec.ts
+__tests__
+

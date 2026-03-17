@@ -1,0 +1,42 @@
+{
+  "name": "examredi-ai-study-platform-full",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "mobile:sync": "npm run build && cd mobile && npx cap sync"
+  },
+  "dependencies": {
+    "@clerk/clerk-react": "^5.61.3",
+    "@google/genai": "^1.28.0",
+    "bcryptjs": "^3.0.3",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "express": "^5.1.0",
+    "framer-motion": "^12.33.0",
+    "fs": "^0.0.1-security",
+    "jsonwebtoken": "^9.0.2",
+    "path": "^0.12.7",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "react-hook-form": "^7.70.0",
+    "react-markdown": "9",
+    "react-router-dom": "^7.9.5",
+    "recharts": "^3.7.0",
+    "rehype-katex": "7",
+    "rehype-raw": "7",
+    "remark-gfm": "4",
+    "remark-math": "6",
+    "url": "^0.11.4"
+  },
+  "devDependencies": {
+    "@types/node": "^22.14.0",
+    "@vitejs/plugin-react": "^5.0.0",
+    "typescript": "~5.8.2",
+    "vite": "^6.2.0",
+    "vite-plugin-pwa": "^1.2.0"
+  }
+}
