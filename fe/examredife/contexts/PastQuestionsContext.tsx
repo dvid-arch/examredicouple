@@ -4,8 +4,9 @@ import apiService from '../services/apiService.ts';
 import { getCache, setCache } from '../services/db.ts';
 
 // Cache keys used in IndexedDB
-const CACHE_KEY_PAPERS = 'papers_v3';
-const CACHE_KEY_GUIDES = 'guides_v4';
+// Cache keys used in IndexedDB - Bumping version to force fresh fetch after coupling
+const CACHE_KEY_PAPERS = 'papers_v4';
+const CACHE_KEY_GUIDES = 'guides_v5';
 
 interface PastQuestionsContextType {
     papers: PastPaper[];
@@ -51,6 +52,7 @@ export const PastQuestionsProvider: React.FC<{ children: ReactNode }> = ({ child
         try {
             console.log('[Cache] Fetching papers from network...');
             const data = await apiService<PastPaper[]>('/data/papers');
+            console.log(`[Cache] Received ${data?.length || 0} papers from network`);
             setPapers(data);
             papersRef.current = data;
             hasFetchedPapersRef.current = true;
