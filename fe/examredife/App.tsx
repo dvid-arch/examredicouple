@@ -48,6 +48,7 @@ const VerifyEmailPage = lazy(() => import('./pages/VerifyEmailPage.tsx'));
 const ResetPasswordPage = lazy(() => import('./pages/ResetPasswordPage.tsx'));
 const AuthSuccess = lazy(() => import('./pages/AuthSuccess.tsx'));
 const QuestionPage = lazy(() => import('./pages/QuestionPage.tsx'));
+const SubjectLandingPage = lazy(() => import('./pages/SubjectLandingPage.tsx'));
 
 
 // Admin - Lazy load admin pages
@@ -244,6 +245,12 @@ const router = createBrowserRouter(
         element={<Suspense fallback={<PageLoader />}><QuestionPage /></Suspense>}
       />
 
+
+      {/* Public SEO Landing Pages - No auth required */}
+      <Route
+        path="/past-questions/:slug"
+        element={<Suspense fallback={<PageLoader />}><SubjectLandingPage /></Suspense>}
+      />
 
       {/* Fallback */}
       <Route path="*" element={<Navigate to="/dashboard" replace />} />

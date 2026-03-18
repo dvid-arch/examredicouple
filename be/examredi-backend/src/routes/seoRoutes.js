@@ -34,27 +34,24 @@ router.get('/sitemap.xml', async (req, res) => {
   </url>`;
         });
 
-        // Dynamic Subject Practice Pages
+        // Dynamic Subject Past Questions Landing Pages (public, SEO-optimized)
         subjects.forEach(subject => {
             const slug = encodeURIComponent(subject.toLowerCase().replace(/\s+/g, '-'));
             xml += `
   <url>
-    <loc>${baseUrl}/practice/${slug}</loc>
+    <loc>${baseUrl}/past-questions/${slug}</loc>
     <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
+    <priority>0.8</priority>
   </url>`;
-        });
 
-        // Add sitemap for each subject per exam type
-        types.forEach(type => {
-            subjects.forEach(subject => {
-                const subjectSlug = encodeURIComponent(subject.toLowerCase().replace(/\s+/g, '-'));
+            // Include per exam type variants
+            types.forEach(type => {
                 const typeSlug = encodeURIComponent(type.toLowerCase());
                 xml += `
   <url>
-    <loc>${baseUrl}/practice/${subjectSlug}?examType=${typeSlug}</loc>
+    <loc>${baseUrl}/past-questions/${slug}?examType=${typeSlug}</loc>
     <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
+    <priority>0.7</priority>
   </url>`;
             });
         });
