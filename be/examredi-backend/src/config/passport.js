@@ -39,7 +39,7 @@ const configurePassport = (passport) => {
 
                     // Create new user if not found
                     user = await User.create({
-                        name: profile.displayName,
+                        name: profile.displayName || email.split('@')[0],
                         email: email,
                         googleId: profile.id,
                         photoURL: photoURL,
