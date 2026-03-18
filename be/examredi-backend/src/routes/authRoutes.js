@@ -22,20 +22,32 @@ const router = express.Router();
 
 // Google OAuth Routes
 router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
-router.get('/google/callback', passport.authenticate('google', { session: false }), async (req, res) => {
-    let frontendUrl = process.env.FRONTEND_URL || 'https://examredicouple.onrender.com';
-    if (frontendUrl.endsWith('/')) frontendUrl = frontendUrl.slice(0, -1);
+router.get('/google/callback', (req, res, next) => {
+    passport.authenticate('google', { session: false }, async (err, user, info) => {
+        let frontendUrl = process.env.FRONTEND_URL || 'https://examredicouple.onrender.com';
+        if (frontendUrl.endsWith('/')) frontendUrl = frontendUrl.slice(0, -1);
 
-    if (!req.user) {
-        return res.redirect(`${frontendUrl}/login?error=auth_failed`);
-    }
+        if (err) {
+            console.error('[OAuth Callback Error]:', err);
+            return res.redirect(`${frontendUrl}/login?error=auth_failed&msg=${encodeURIComponent(err.message)}`);
+        }
 
-    const sessionId = await createSession(req.user, req);
+        if (!user) {
+            console.warn('[OAuth Callback Info]:', info);
+            return res.redirect(`${frontendUrl}/login?error=user_not_found`);
+        }
 
-    const accessToken = generateAccessToken(req.user.id, sessionId);
-    const refreshToken = generateRefreshToken(req.user.id, sessionId);
+        try {
+            const sessionId = await createSession(user, req);
+            const accessToken = generateAccessToken(user.id, sessionId);
+            const refreshToken = generateRefreshToken(user.id, sessionId);
 
-    res.redirect(`${frontendUrl}/auth-success?accessToken=${accessToken}&refreshToken=${refreshToken}`);
+            return res.redirect(`${frontendUrl}/auth-success?accessToken=${accessToken}&refreshToken=${refreshToken}`);
+        } catch (error) {
+            console.error('[Session Creation Error]:', error);
+            return res.redirect(`${frontendUrl}/login?error=session_error`);
+        }
+    })(req, res, next);
 });
 
 
