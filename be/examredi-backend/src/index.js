@@ -10,6 +10,7 @@ import adminRoutes from './routes/adminRoutes.js';
 import userRoutes from './routes/userRoutes.js';
 import flashcardRoutes from './routes/flashcardRoutes.js';
 import paymentRoutes from './routes/paymentRoutes.js';
+import seoRoutes from './routes/seoRoutes.js';
 
 import connectDB from './db/connect.js';
 import passport from 'passport';
@@ -75,6 +76,9 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/flashcards', flashcardRoutes);
 app.use('/api/payments', paymentRoutes);
+
+// SEO Routes (sitemap, etc.)
+app.use('/', seoRoutes);
 
 // Catch-all route for React Browser Routing
 app.get('*', (req, res) => {

@@ -1,4 +1,5 @@
 User-agent: *
 Allow: /
-
-Sitemap: https://examredi.vercel.app/sitemap.xml
+Disallow: /api/
+Disallow: /admin/
+Sitemap: https://examredi.com/sitemap.xml
