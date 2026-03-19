@@ -1,0 +1,12 @@
+{
+  "name": "examredi-root",
+  "version": "1.0.0",
+  "private": true,
+  "engines": {
+    "node": "20.x"
+  },
+  "scripts": {
+    "heroku-postbuild": "cd be/examredi-backend && npm install",
+    "start": "cd be/examredi-backend && npm start"
+  }
+}
