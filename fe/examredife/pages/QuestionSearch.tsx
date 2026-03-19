@@ -279,7 +279,7 @@ const QuestionSearch: React.FC = () => {
                             <p className="text-slate-500 font-medium">Loading results...</p>
                         </div>
                     ) : resultsView === 'papers' ? (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
                             {filteredPapers.map(paper => (
                                 <Card key={paper.id} className="p-0 overflow-hidden border-slate-100 dark:border-slate-800 hover:shadow-lg transition-all group">
                                     <button
