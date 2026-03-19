@@ -60,6 +60,7 @@ const QuestionSearch: React.FC = () => {
     const [guideResults, setGuideResults] = useState<StudyGuide[]>([]);
     const [totalResultsCount, setTotalResultsCount] = useState(0);
     const [hasSearched, setHasSearched] = useState(false);
+    const [publicYears, setPublicYears] = useState<number[]>([]);
 
     // Filter state
     const [selectedSubject, setSelectedSubject] = useState('all');
@@ -74,9 +75,20 @@ const QuestionSearch: React.FC = () => {
         if (saved) {
             try { setRecentSearches(JSON.parse(saved)); } catch (e) { }
         }
-        console.log("QuestionSearch mounted, fetching data...");
-        fetchPapers();
-        fetchGuides();
+        
+        const fetchInitialData = async () => {
+            fetchPapers();
+            fetchGuides();
+            try {
+                const metadata = await apiService<any[]>('/public/subjects');
+                const years = [...new Set(metadata.flatMap(s => s.years))].sort((a, b) => b - a);
+                setPublicYears(years);
+            } catch (e) {
+                console.error("Failed to fetch public years:", e);
+            }
+        };
+
+        fetchInitialData();
     }, [fetchPapers, fetchGuides]);
 
     const isAdmin = user?.role === 'admin';
@@ -171,10 +183,11 @@ const QuestionSearch: React.FC = () => {
     }, [allowedSubjectsList]);
 
     const years = useMemo(() => {
-        const allowedPapers = allPapers.filter(paper => allowedSubjectsList.includes(paper.subject));
-        const uniqueYears = [...new Set(allowedPapers.map(p => p.year))].sort((a, b) => Number(b) - Number(a));
-        return ['all', ...uniqueYears];
-    }, [allPapers, allowedSubjectsList]);
+        const localYears = allPapers.filter(paper => allowedSubjectsList.includes(paper.subject)).map(p => p.year);
+        // Combine with public years so free users see what they are missing
+        const combined = [...new Set([...localYears, ...publicYears])].sort((a, b) => Number(b) - Number(a));
+        return ['all', ...combined];
+    }, [allPapers, allowedSubjectsList, publicYears]);
 
     const filteredPapers = useMemo(() => {
         return allPapers.filter(paper => {
@@ -200,9 +213,16 @@ const QuestionSearch: React.FC = () => {
                 selectedSubject={selectedSubject}
                 selectedYear={selectedYear}
                 onSubjectChange={setSelectedSubject}
-                onYearChange={setSelectedYear}
+                onYearChange={(year) => {
+                    if (year !== 'all' && Number(year) !== 2000 && !isAdmin && user?.subscription !== 'pro') {
+                        alert(`🔒 Year ${year} is an ExamRedi Pro feature. Please upgrade to unlock all past papers (1970 - 2024).`);
+                        return;
+                    }
+                    setSelectedYear(year);
+                }}
                 isOpen={isFilterSidebarOpen}
                 onClose={() => setIsFilterSidebarOpen(false)}
+                isPro={isAdmin || user?.subscription === 'pro'}
             />
 
             {/* Main Content Area */}
@@ -281,7 +301,7 @@ const QuestionSearch: React.FC = () => {
                     ) : resultsView === 'papers' ? (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
                             {filteredPapers.map(paper => (
-                                <Card key={paper.id} className="p-0 overflow-hidden border-slate-100 dark:border-slate-800 hover:shadow-lg transition-all group">
+                                <Card key={paper.id} className={`p-0 overflow-hidden border-slate-100 dark:border-slate-800 hover:shadow-lg transition-all group ${expandedPaperId === paper.id ? 'md:col-span-2' : ''}`}>
                                     <button
                                         onClick={() => setExpandedPaperId(expandedPaperId === paper.id ? null : paper.id)}
                                         className="w-full text-left p-5 flex items-center justify-between"

@@ -9,6 +9,7 @@ interface FilterSidebarProps {
     onYearChange: (year: string) => void;
     isOpen: boolean;
     onClose: () => void;
+    isPro?: boolean;
 }
 
 const FilterSidebar: React.FC<FilterSidebarProps> = ({
@@ -19,7 +20,8 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
     onSubjectChange,
     onYearChange,
     isOpen,
-    onClose
+    onClose,
+    isPro = false
 }) => {
     return (
         <div className={`fixed inset-0 z-40 lg:relative lg:z-0 lg:block lg:w-56 ${isOpen ? 'block' : 'hidden'}`}>
@@ -71,12 +73,13 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
                                             onYearChange(year.toString());
                                             if (window.innerWidth < 1024) onClose();
                                         }}
-                                        className={`px-3 py-2 rounded-xl text-xs transition-all border ${selectedYear === year.toString()
+                                        className={`px-3 py-2 rounded-xl text-xs transition-all border relative flex items-center justify-center gap-1 ${selectedYear === year.toString()
                                             ? 'bg-primary border-primary text-white font-bold'
                                             : 'border-slate-100 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-primary/50'
                                             }`}
                                     >
                                         {year === 'all' ? 'All' : year}
+                                        {year !== 'all' && Number(year) !== 2000 && !isPro && <span className="text-[10px]">🔒</span>}
                                     </button>
                                 ))}
                             </div>
