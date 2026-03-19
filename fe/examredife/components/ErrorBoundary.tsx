@@ -24,6 +24,12 @@ const ErrorBoundary: React.FC = () => {
         }
     } else if (error instanceof Error) {
         errorMessage = error.message;
+        
+        // Handle "Failed to fetch dynamically imported module" or "ChunkLoadError"
+        if (error.name === 'ChunkLoadError' || /loading.*chunk/i.test(error.message) || /failed to fetch dynamically imported module/i.test(error.message)) {
+            errorTitle = "New Version Available!";
+            errorMessage = "ExamRedi has been updated with new features and performance improvements. Please refresh your browser to use the latest version.";
+        }
     }
 
     return (
