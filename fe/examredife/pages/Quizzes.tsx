@@ -129,8 +129,8 @@ const Quizzes: React.FC = () => {
             subjects.forEach(subject => {
                 if (!next[subject]) {
                     const subjectYears = yearsBySubject.get(subject) || [];
-                    // Default to 2000 for free users if available, otherwise most recent
-                    const defaultYear = !isPro && subjectYears.includes(2000) ? 2000 : (subjectYears[0] || 'random');
+                    // Default to 2024 for free users if available, otherwise most recent
+                    const defaultYear = !isPro && subjectYears.includes(2024) ? 2024 : (subjectYears[0] || 'random');
                     
                     next[subject] = {
                         year: defaultYear as any,
@@ -213,8 +213,8 @@ const Quizzes: React.FC = () => {
             count: standardSelections[subject]?.count ?? (getSubjectKey(subject) === 'english' ? 60 : 40),
         }));
 
-        if (selections.some(s => s.year !== 'random' && s.year !== 2000 && !isPro)) {
-            alert('One or more selected years are ExamRedi Pro features. Please select year 2000 or upgrade to Pro.');
+        if (selections.some(s => s.year !== 'random' && s.year !== 2024 && !isPro)) {
+            alert('One or more selected years are ExamRedi Pro features. Please select year 2024 or upgrade to Pro.');
             return;
         }
 
@@ -246,8 +246,8 @@ const Quizzes: React.FC = () => {
             count: data.count
         }));
 
-        if (selectionsArray.some(s => s.year !== 'random' && s.year !== 2000 && !isPro)) {
-            alert('One or more selected years are ExamRedi Pro features. Please select year 2000 or upgrade to Pro.');
+        if (selectionsArray.some(s => s.year !== 'random' && s.year !== 2024 && !isPro)) {
+            alert('One or more selected years are ExamRedi Pro features. Please select year 2024 or upgrade to Pro.');
             return;
         }
 
@@ -452,7 +452,7 @@ const Quizzes: React.FC = () => {
                                                                 className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-slate-600 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                                                             >
                                                                 {subjectYears.map(year => {
-                                                                    const isLocked = !isPro && year !== 2000;
+                                                                    const isLocked = !isPro && year !== 2024;
                                                                     return (
                                                                         <option key={year} value={year}>
                                                                             {year} {isLocked ? '🔒 (Pro)' : ''}
@@ -531,7 +531,7 @@ const Quizzes: React.FC = () => {
                                                                 className="w-full bg-gray-100 dark:bg-gray-700 border-gray-200 dark:border-slate-600 border rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
                                                             >
                                                                 {getYearsForSubject(subject).map(year => {
-                                                                    const isLocked = !isPro && year !== 2000;
+                                                                    const isLocked = !isPro && year !== 2024;
                                                                     return (
                                                                         <option key={year} value={year}>
                                                                             {year} {isLocked ? '🔒 (Pro)' : ''}

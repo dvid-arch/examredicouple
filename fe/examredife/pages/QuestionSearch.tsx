@@ -214,7 +214,7 @@ const QuestionSearch: React.FC = () => {
                 selectedYear={selectedYear}
                 onSubjectChange={setSelectedSubject}
                 onYearChange={(year) => {
-                    if (year !== 'all' && Number(year) !== 2000 && !isAdmin && user?.subscription !== 'pro') {
+                    if (year !== 'all' && Number(year) !== 2024 && !isAdmin && user?.subscription !== 'pro') {
                         alert(`🔒 Year ${year} is an ExamRedi Pro feature. Please upgrade to unlock all past papers (1970 - 2024).`);
                         return;
                     }
@@ -278,7 +278,7 @@ const QuestionSearch: React.FC = () => {
                             </h2>
                             {!isAdmin && user?.subscription !== 'pro' && (
                                 <p className="text-[10px] font-bold text-amber-600 dark:text-amber-400 flex items-center gap-1 mt-1">
-                                    <span>🔒</span> Currently searching Year 2000 papers only. 
+                                    <span>🔒</span> Currently searching Year 2024 papers only. 
                                     <Link to="/profile" className="underline hover:text-amber-700">Upgrade to Pro to search all years.</Link>
                                 </p>
                             )}

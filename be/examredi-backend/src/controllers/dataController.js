@@ -116,15 +116,15 @@ export const getPapers = async (req, res) => {
 
         // Apply access restriction
         if (!isPro) {
-            // Free users only get the "start year" which is 2000
-            if (year && Number(year) !== 2000) {
+            // Free users only get the "start year" which is 2024
+            if (year && Number(year) !== 2024) {
                 return res.status(403).json({
                     message: `Year ${year} is an ExamRedi Pro feature. Upgrade to unlock all years (1970 - 2024).`,
                     isLocked: true
                 });
             }
-            filter.year = 2000;
-            console.log(`[DataDebug] Restriction applied: Only year 2000 allowed for free user.`);
+            filter.year = 2024;
+            console.log(`[DataDebug] Restriction applied: Only year 2024 allowed for free user.`);
         } else {
             if (year) filter.year = Number(year);
             console.log(`[DataDebug] Pro/Admin bypass - Full access granted.`);
@@ -184,7 +184,7 @@ export const searchPapers = async (req, res) => {
         const isPro = req.user?.subscription === 'pro' || req.user?.role === 'admin';
 
         if (!isPro) {
-            filter.year = 2000;
+            filter.year = 2024;
         }
 
         // Database search using regex (case-insensitive)
@@ -213,7 +213,7 @@ export const searchPapers = async (req, res) => {
 
                     if (!isPro) {
                         delete result.explanation;
-                        result.isLocked = paper.year !== 2000;
+                        result.isLocked = paper.year !== 2024;
                     }
 
                     results.push(result);
@@ -253,7 +253,7 @@ export const getQuestionById = async (req, res) => {
 
         if (!isPro) {
             delete result.explanation;
-            result.isLocked = paper.year !== 2000;
+            result.isLocked = paper.year !== 2024;
         }
 
         res.json(result);
@@ -311,7 +311,7 @@ export const searchByTopic = async (req, res) => {
         const isPro = req.user?.subscription === 'pro' || req.user?.role === 'admin';
 
         if (!isPro) {
-            filter.year = 2000;
+            filter.year = 2024;
         }
 
         const papers = await Paper.find(filter).lean();
@@ -335,7 +335,7 @@ export const searchByTopic = async (req, res) => {
 
                     if (!isPro) {
                         delete result.explanation;
-                        result.isLocked = paper.year !== 2000;
+                        result.isLocked = paper.year !== 2024;
                     }
 
                     results.push(result);

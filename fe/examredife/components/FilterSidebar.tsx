@@ -79,7 +79,7 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
                                             }`}
                                     >
                                         {year === 'all' ? 'All' : year}
-                                        {year !== 'all' && Number(year) !== 2000 && !isPro && <span className="text-[10px]">🔒</span>}
+                                        {year !== 'all' && Number(year) !== 2024 && !isPro && <span className="text-[10px]">🔒</span>}
                                     </button>
                                 ))}
                             </div>
