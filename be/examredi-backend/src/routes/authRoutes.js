@@ -24,7 +24,7 @@ const router = express.Router();
 router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
 router.get('/google/callback', (req, res, next) => {
     passport.authenticate('google', { session: false }, async (err, user, info) => {
-        let frontendUrl = process.env.FRONTEND_URL || 'https://examredicouple.onrender.com';
+        let frontendUrl = process.env.FRONTEND_URL || 'https://examredi.com';
         if (frontendUrl.endsWith('/')) frontendUrl = frontendUrl.slice(0, -1);
 
         if (err) {

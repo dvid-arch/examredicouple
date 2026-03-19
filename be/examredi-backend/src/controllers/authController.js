@@ -104,7 +104,7 @@ export const registerUser = async (req, res) => {
             await user.save(); // Save the token to DB
 
             // Create Verification URL
-            const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+            const frontendUrl = process.env.FRONTEND_URL || 'https://examredi.com';
             const verifyUrl = `${frontendUrl}/verify-email/${verificationToken}`;
 
             const message = `
@@ -309,7 +309,7 @@ export const resendVerification = async (req, res) => {
         await user.save();
 
         // Create Verification URL
-        const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+        const frontendUrl = process.env.FRONTEND_URL || 'https://examredi.com';
         const verifyUrl = `${frontendUrl}/verify-email/${verificationToken}`;
 
         const message = `
@@ -350,7 +350,7 @@ export const forgotPassword = async (req, res) => {
 
         // Create reset url
         // Frontend route: /reset-password/:token
-        const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+        const frontendUrl = process.env.FRONTEND_URL || 'https://examredi.com';
         const resetUrl = `${frontendUrl}/reset-password/${resetToken}`;
 
         const message = `
