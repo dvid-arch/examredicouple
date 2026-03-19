@@ -14,7 +14,7 @@
     "seed:guides": "node src/scripts/seed_guides.js",
     "seed:all": "node src/scripts/seed_all_papers.js",
     "seed:render": "node src/scripts/master_seeder.js all",
-    "build": "cd ../../fe/examredife && npm install && npm run build && cd ../../be/examredi-backend && echo \"Build step complete\""
+    "build": "cd ../../fe/examredife && npm install --include=dev && npm run build && cd ../../be/examredi-backend && echo \"Build step complete\""
   },
   "keywords": [],
   "author": "",
