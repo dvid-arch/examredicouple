@@ -6,7 +6,7 @@
     "node": "20.x"
   },
   "scripts": {
-    "heroku-postbuild": "cd be/examredi-backend && npm install",
+    "heroku-postbuild": "cd be/examredi-backend && npm install && npm run build",
     "start": "cd be/examredi-backend && npm start"
   }
 }
