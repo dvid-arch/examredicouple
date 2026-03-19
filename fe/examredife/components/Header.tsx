@@ -165,7 +165,10 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
                                         <span>{user.aiCredits} AI Credits</span>
                                     </div>
                                 ) : (
-                                    <button onClick={handleUpgradeClick} className="hidden sm:block bg-accent text-white font-bold py-2 px-4 rounded-lg hover:bg-green-600 transition-colors text-sm">
+                                    <button 
+                                        onClick={handleUpgradeClick} 
+                                        className="bg-accent text-white font-black py-1.5 px-3 sm:px-4 rounded-lg hover:bg-green-600 transition-all text-xs sm:text-sm animate-pulse shadow-lg shadow-accent/20"
+                                    >
                                         Upgrade
                                     </button>
                                 )}
