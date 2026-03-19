@@ -35,6 +35,15 @@ const port = process.env.PORT || 5000;
 connectDB();
 
 app.use(cors());
+
+// Force HTTPS middleware for Heroku
+app.use((req, res, next) => {
+    if (process.env.NODE_ENV === 'production' && req.headers['x-forwarded-proto'] !== 'https') {
+        return res.redirect(`https://${req.get('host')}${req.url}`);
+    }
+    next();
+});
+
 app.use(express.json({ limit: '10mb' }));
 
 // Request logging middleware
