@@ -523,7 +523,7 @@ export const getTopics = async (req, res) => {
 // @route   GET /api/data/sitemap.xml
 export const getSitemap = async (req, res) => {
     try {
-        const frontendUrl = process.env.FRONTEND_URL || 'https://examredi.vercel.app';
+        const frontendUrl = process.env.FRONTEND_URL || 'https://examredi.com';
 
         // Fetch all papers with their question IDs
         const papers = await Paper.find({}, 'questions.id updatedAt').lean();

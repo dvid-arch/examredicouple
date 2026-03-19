@@ -35,15 +35,17 @@ const useSEO = ({ title, description, canonical, keywords }: SEOProps) => {
         }
 
         // Handle Canonical Link
-        if (canonical) {
-            let linkCanonical = document.querySelector('link[rel="canonical"]');
-            if (!linkCanonical) {
-                linkCanonical = document.createElement('link');
-                linkCanonical.setAttribute('rel', 'canonical');
-                document.head.appendChild(linkCanonical);
-            }
-            linkCanonical.setAttribute('href', canonical);
+        const currentPath = window.location.pathname;
+        const defaultCanonical = `https://examredi.com${currentPath}`;
+        const finalCanonical = canonical || defaultCanonical;
+
+        let linkCanonical = document.querySelector('link[rel="canonical"]');
+        if (!linkCanonical) {
+            linkCanonical = document.createElement('link');
+            linkCanonical.setAttribute('rel', 'canonical');
+            document.head.appendChild(linkCanonical);
         }
+        linkCanonical.setAttribute('href', finalCanonical);
     }, [title, description, canonical, keywords]);
 };
 
