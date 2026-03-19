@@ -148,7 +148,7 @@ const MainLayout: React.FC = () => {
           }
         }} />
         <main id="main-content" className="flex-1 overflow-y-auto overflow-x-hidden p-3 pb-24 sm:pb-4 sm:p-4 md:p-6 lg:p-8">
-          <div className="max-w-7xl mx-auto">
+          <div className="max-w-7xl 2xl:max-w-screen-2xl mx-auto">
             <Suspense fallback={<PageLoader />}>
               <AnimatePresence mode="wait">
                 <motion.div

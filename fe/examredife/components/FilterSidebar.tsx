@@ -22,13 +22,13 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
     onClose
 }) => {
     return (
-        <div className={`fixed inset-0 z-40 lg:relative lg:z-0 lg:block lg:w-64 ${isOpen ? 'block' : 'hidden'}`}>
+        <div className={`fixed inset-0 z-40 lg:relative lg:z-0 lg:block lg:w-56 ${isOpen ? 'block' : 'hidden'}`}>
             <div
                 className="absolute inset-0 bg-slate-900/50 backdrop-blur-sm lg:hidden"
                 onClick={onClose}
             ></div>
-
-            <aside className="absolute left-0 top-0 bottom-0 w-72 bg-white dark:bg-slate-900 shadow-xl lg:shadow-none lg:w-64 flex flex-col h-full border-r border-slate-100 dark:border-slate-800 transition-transform duration-300 transform lg:translate-x-0">
+ 
+            <aside className="absolute left-0 top-0 bottom-0 w-72 bg-white dark:bg-slate-900 shadow-xl lg:shadow-none lg:w-56 flex flex-col h-full border-r border-slate-100 dark:border-slate-800 transition-transform duration-300 transform lg:translate-x-0">
                 <div className="p-6 flex-1 overflow-y-auto">
                     <div className="flex items-center justify-between mb-8 lg:hidden">
                         <h2 className="text-xl font-bold text-slate-800 dark:text-white">Filters</h2>

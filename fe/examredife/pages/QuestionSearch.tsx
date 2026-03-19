@@ -192,7 +192,7 @@ const QuestionSearch: React.FC = () => {
     };
 
     return (
-        <div className="flex flex-col lg:flex-row gap-8 pb-20">
+        <div className="flex flex-col lg:flex-row gap-4 lg:gap-6 pb-20">
             {/* Sidebar Filters */}
             <FilterSidebar
                 subjects={subjects}
