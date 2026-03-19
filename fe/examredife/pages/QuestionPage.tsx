@@ -4,12 +4,16 @@ import apiService from '../services/apiService.ts';
 import { ChallengeQuestion } from '../types.ts';
 import QuestionRenderer from '../components/QuestionRenderer.tsx';
 import Header from '../components/Header.tsx';
+import { useAuth } from '../contexts/AuthContext.tsx';
 
 const QuestionPage: React.FC = () => {
     const { id } = useParams<{ id: string }>();
+    const { user } = useAuth();
     const [question, setQuestion] = useState<ChallengeQuestion | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+
+    const isPro = user?.subscription === 'pro' || user?.role === 'admin';
 
     useEffect(() => {
         const fetchQuestion = async () => {
@@ -96,7 +100,7 @@ const QuestionPage: React.FC = () => {
                 />
             </div>
 
-            {question.explanation && (
+            {question.explanation ? (
                 <div className="bg-blue-50/50 border border-blue-100 rounded-xl p-6 mb-8">
                     <h3 className="text-lg font-bold text-blue-900 mb-3 flex items-center gap-2">
                         <span>💡</span> Explanation
@@ -104,6 +108,17 @@ const QuestionPage: React.FC = () => {
                     <div className="text-slate-700 leading-relaxed prose prose-slate max-w-none">
                         {question.explanation}
                     </div>
+                </div>
+            ) : !isPro && (
+                <div className="bg-slate-50 border border-slate-200 border-dashed rounded-xl p-6 mb-8 text-center">
+                    <div className="text-2xl mb-2">🔒</div>
+                    <h3 className="text-lg font-bold text-slate-800 mb-2">Detailed Explanation Locked</h3>
+                    <p className="text-slate-600 mb-4 max-w-md mx-auto">
+                        ExamRedi Pro members get access to step-by-step explanations for over 10,000 past questions.
+                    </p>
+                    <Link to="/profile" className="inline-block bg-primary text-white font-bold px-6 py-2 rounded-lg shadow-sm hover:bg-green-700 transition-colors">
+                        Upgrade to Pro
+                    </Link>
                 </div>
             )}
 

@@ -252,9 +252,17 @@ const QuestionSearch: React.FC = () => {
 
                 <div className="space-y-6">
                     <div className="flex items-center justify-between px-2">
-                        <h2 className="text-xl font-bold text-slate-800 dark:text-white">
-                            {resultsView === 'questions' ? `Search Results (${totalResultsCount})` : `Library (${filteredPapers.length} Papers)`}
-                        </h2>
+                        <div className="flex flex-col">
+                            <h2 className="text-xl font-bold text-slate-800 dark:text-white">
+                                {resultsView === 'questions' ? `Search Results (${totalResultsCount})` : `Library (${filteredPapers.length} Papers)`}
+                            </h2>
+                            {!isAdmin && user?.subscription !== 'pro' && (
+                                <p className="text-[10px] font-bold text-amber-600 dark:text-amber-400 flex items-center gap-1 mt-1">
+                                    <span>🔒</span> Currently searching Year 2000 papers only. 
+                                    <Link to="/profile" className="underline hover:text-amber-700">Upgrade to Pro to search all years.</Link>
+                                </p>
+                            )}
+                        </div>
                         {resultsView === 'questions' && (
                             <button
                                 onClick={() => { setQuery(''); performSearch(''); }}

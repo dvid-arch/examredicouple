@@ -112,28 +112,47 @@ export const getPapers = async (req, res) => {
             filter.year = Number(year);
         }
 
-        // Apply access restriction: Non-admins can only access papers from 2000 and later
-        if (req.user?.role !== 'admin') {
-            filter.year = filter.year ? { $eq: filter.year, $gte: 2000 } : { $gte: 2000 };
-            console.log(`[DataDebug] Restriction applied for role: ${req.user?.role || 'anonymous'}`);
+        const isPro = req.user?.subscription === 'pro' || req.user?.role === 'admin';
+
+        // Apply access restriction
+        if (!isPro) {
+            // Free users only get the "start year" which is 2000
+            if (year && Number(year) !== 2000) {
+                return res.status(403).json({
+                    message: `Year ${year} is an ExamRedi Pro feature. Upgrade to unlock all years (1970 - 2024).`,
+                    isLocked: true
+                });
+            }
+            filter.year = 2000;
+            console.log(`[DataDebug] Restriction applied: Only year 2000 allowed for free user.`);
         } else {
-            console.log(`[DataDebug] Admin bypass - No restriction applied.`);
+            if (year) filter.year = Number(year);
+            console.log(`[DataDebug] Pro/Admin bypass - Full access granted.`);
         }
 
         console.log(`[DataDebug] Final DB Filter:`, JSON.stringify(filter));
 
-        // Query MongoDB with lean() for performance
+        // Query MongoDB
         let papers = await Paper.find(filter).lean();
-        console.log(`[DataDebug] DB returned ${papers.length} papers.`);
-
-        const isAuthenticated = !!req.user;
-
-        if (!isAuthenticated) {
+        
+        // Secondary safety: Strip explanations and further limit for non-pro
+        if (!isPro) {
             papers = papers.map(paper => ({
                 ...paper,
-                questions: (paper.questions || []).slice(0, 10),
-                isLimited: true
+                isLimited: true,
+                questions: (paper.questions || []).map(q => {
+                    const { explanation, ...rest } = q;
+                    return rest;
+                })
             }));
+
+            // Guests (unauthenticated) still get the 10-question teaser even within year 2000
+            if (!req.user) {
+                papers = papers.map(paper => ({
+                    ...paper,
+                    questions: paper.questions.slice(0, 10)
+                }));
+            }
         }
 
         res.json(papers);
@@ -162,9 +181,10 @@ export const searchPapers = async (req, res) => {
             ]
         };
 
-        // Apply access restriction: Non-admins can only access papers from 2000 and later
-        if (req.user?.role !== 'admin') {
-            filter.year = { $gte: 2000 };
+        const isPro = req.user?.subscription === 'pro' || req.user?.role === 'admin';
+
+        if (!isPro) {
+            filter.year = 2000;
         }
 
         // Database search using regex (case-insensitive)
@@ -176,24 +196,27 @@ export const searchPapers = async (req, res) => {
         papers.forEach(paper => {
             paper.questions.forEach(q => {
                 const qText = q.question ? String(q.question).toLowerCase() : '';
-                const optA = q.options?.A?.text ? String(q.options.A.text).toLowerCase() : '';
-                const optB = q.options?.B?.text ? String(q.options.B.text).toLowerCase() : '';
-                const optC = q.options?.C?.text ? String(q.options.C.text).toLowerCase() : '';
-                const optD = q.options?.D?.text ? String(q.options.D.text).toLowerCase() : '';
-
+                // ... search logic ...
                 if (
                     qText.includes(lowerQuery) ||
-                    optA.includes(lowerQuery) ||
-                    optB.includes(lowerQuery) ||
-                    optC.includes(lowerQuery) ||
-                    optD.includes(lowerQuery)
+                    (q.options?.A?.text && String(q.options.A.text).toLowerCase().includes(lowerQuery)) ||
+                    (q.options?.B?.text && String(q.options.B.text).toLowerCase().includes(lowerQuery)) ||
+                    (q.options?.C?.text && String(q.options.C.text).toLowerCase().includes(lowerQuery)) ||
+                    (q.options?.D?.text && String(q.options.D.text).toLowerCase().includes(lowerQuery))
                 ) {
-                    results.push({
+                    const result = {
                         ...q,
                         subject: paper.subject,
                         year: paper.year,
                         exam: paper.exam
-                    });
+                    };
+
+                    if (!isPro) {
+                        delete result.explanation;
+                        result.isLocked = paper.year !== 2000;
+                    }
+
+                    results.push(result);
                 }
             });
         });
@@ -218,6 +241,8 @@ export const getQuestionById = async (req, res) => {
 
         const question = paper.questions.find(q => q.id === id);
 
+        const isPro = req.user?.subscription === 'pro' || req.user?.role === 'admin';
+
         // Add paper metadata for context
         const result = {
             ...question,
@@ -225,6 +250,11 @@ export const getQuestionById = async (req, res) => {
             year: paper.year,
             exam: paper.exam
         };
+
+        if (!isPro) {
+            delete result.explanation;
+            result.isLocked = paper.year !== 2000;
+        }
 
         res.json(result);
     } catch (error) {
@@ -278,9 +308,10 @@ export const searchByTopic = async (req, res) => {
             filter.subject = new RegExp('^' + escapedSubject + '$', 'i');
         }
 
-        // Apply access restriction: Non-admins can only access papers from 2000 and later
-        if (req.user?.role !== 'admin') {
-            filter.year = { $gte: 2000 };
+        const isPro = req.user?.subscription === 'pro' || req.user?.role === 'admin';
+
+        if (!isPro) {
+            filter.year = 2000;
         }
 
         const papers = await Paper.find(filter).lean();
@@ -295,12 +326,19 @@ export const searchByTopic = async (req, res) => {
                     questionTopics.includes(slugifiedTerm);
 
                 if (isMatch) {
-                    results.push({
+                    const result = {
                         ...q,
                         subject: paper.subject,
                         year: paper.year,
                         exam: paper.exam
-                    });
+                    };
+
+                    if (!isPro) {
+                        delete result.explanation;
+                        result.isLocked = paper.year !== 2000;
+                    }
+
+                    results.push(result);
                 }
             });
         });
@@ -316,8 +354,23 @@ export const searchByTopic = async (req, res) => {
 // @route   GET /api/data/guides
 export const getGuides = async (req, res) => {
     try {
+        const isPro = req.user?.subscription === 'pro' || req.user?.role === 'admin';
+
         // Use MongoDB directly
-        const guides = await Guide.find({}).sort({ subject: 1 }).lean();
+        let guides = await Guide.find({}).sort({ subject: 1 }).lean();
+
+        if (!isPro) {
+            guides = guides.map(guide => ({
+                ...guide,
+                isLimited: true,
+                topics: (guide.topics || []).map((topic, index) => ({
+                    ...topic,
+                    isFree: index < 2, // First 2 are free
+                    content: index < 2 ? topic.content : undefined // Hide content for locked ones
+                }))
+            }));
+        }
+
         res.json(guides);
     } catch (error) {
         console.error('Error fetching guides:', error);

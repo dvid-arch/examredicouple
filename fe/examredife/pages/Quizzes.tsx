@@ -7,6 +7,7 @@ import { usePastQuestions } from '../contexts/PastQuestionsContext.tsx';
 import useSEO from '../hooks/useSEO.ts';
 import SchemaMarkup from '../components/SchemaMarkup.tsx';
 import { getSubjectKey } from '../constants/subjects.ts';
+import apiService from '../services/apiService.ts';
 
 
 const Quizzes: React.FC = () => {
@@ -46,6 +47,7 @@ const Quizzes: React.FC = () => {
     }, [fetchPapers]);
 
     const isAdmin = user?.role === 'admin';
+    const isPro = user?.subscription === 'pro' || isAdmin;
     const allSubjectsFromPapers = useMemo(() => [...new Set(allPapers.map(p => p.subject))].sort(), [allPapers]);
 
     // For non-admins: show only their 4 preferred subjects (if set) + compulsory English
@@ -80,19 +82,40 @@ const Quizzes: React.FC = () => {
     type StandardSelection = { year: 'random' | number; count: number };
     const [standardSelections, setStandardSelections] = useState<Record<string, StandardSelection>>({});
 
+    // Fetch full available years via public API to show "Locked" placeholders
+    const [publicSubjectMeta, setPublicSubjectMeta] = useState<any[]>([]);
+    useEffect(() => {
+        const fetchPublicMeta = async () => {
+            try {
+                const data = await apiService<any[]>('/public/subjects');
+                setPublicSubjectMeta(data);
+            } catch (err) {
+                console.error("Failed to fetch public subject metadata", err);
+            }
+        };
+        fetchPublicMeta();
+    }, []);
+
     const yearsBySubject = useMemo(() => {
         const map = new Map<string, number[]>();
         subjects.forEach(subject => {
-            const years = new Set(allPapers
+            // Find years from public metadata first (to see all even if locked)
+            const publicMeta = publicSubjectMeta.find(s => s.subject === subject);
+            const publicYears = publicMeta?.years || [];
+            
+            // Merge with actually fetched papers (though papers should be subset of public)
+            const loadedYears = allPapers
                 .filter(p => p.subject === subject)
                 .map(p => p.year)
-                .filter(y => typeof y === 'number' && !isNaN(y)));
+                .filter(y => typeof y === 'number' && !isNaN(y));
 
-            const sortedYears = Array.from(years).sort((a, b) => (b as number) - (a as number));
-            map.set(subject, sortedYears);
+            const combined = Array.from(new Set([...publicYears, ...loadedYears]))
+                .sort((a, b) => (b as number) - (a as number));
+            
+            map.set(subject, combined);
         });
         return map;
-    }, [allPapers, subjects]);
+    }, [allPapers, subjects, publicSubjectMeta]);
 
     const getYearsForSubject = (subject: string) => {
         return yearsBySubject.get(subject) || [];
@@ -106,15 +129,18 @@ const Quizzes: React.FC = () => {
             subjects.forEach(subject => {
                 if (!next[subject]) {
                     const subjectYears = yearsBySubject.get(subject) || [];
+                    // Default to 2000 for free users if available, otherwise most recent
+                    const defaultYear = !isPro && subjectYears.includes(2000) ? 2000 : (subjectYears[0] || 'random');
+                    
                     next[subject] = {
-                        year: subjectYears.length > 0 ? subjectYears[0] : 'random',
+                        year: defaultYear as any,
                         count: subject === 'English' ? 60 : 40
                     };
                 }
             });
             return next;
         });
-    }, [subjects, yearsBySubject]);
+    }, [subjects, yearsBySubject, user]);
 
 
     const [adminStandardSelections, setAdminStandardSelections] = useState<string[]>([]);
@@ -187,6 +213,11 @@ const Quizzes: React.FC = () => {
             count: standardSelections[subject]?.count ?? (getSubjectKey(subject) === 'english' ? 60 : 40),
         }));
 
+        if (selections.some(s => s.year !== 'random' && s.year !== 2000 && !isPro)) {
+            alert('One or more selected years are ExamRedi Pro features. Please select year 2000 or upgrade to Pro.');
+            return;
+        }
+
         if (selections.length !== 4) {
             alert('You need exactly 4 preferred subjects to start a Standard Exam. Please update your profile.');
             return;
@@ -214,6 +245,11 @@ const Quizzes: React.FC = () => {
             year: data.year,
             count: data.count
         }));
+
+        if (selectionsArray.some(s => s.year !== 'random' && s.year !== 2000 && !isPro)) {
+            alert('One or more selected years are ExamRedi Pro features. Please select year 2000 or upgrade to Pro.');
+            return;
+        }
 
         if (selectionsArray.length === 0) {
             alert('Please select at least one subject for your custom practice.');
@@ -415,9 +451,14 @@ const Quizzes: React.FC = () => {
                                                                 }))}
                                                                 className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-slate-600 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                                                             >
-                                                                {subjectYears.map(year => (
-                                                                    <option key={year} value={year}>{year}</option>
-                                                                ))}
+                                                                {subjectYears.map(year => {
+                                                                    const isLocked = !isPro && year !== 2000;
+                                                                    return (
+                                                                        <option key={year} value={year}>
+                                                                            {year} {isLocked ? '🔒 (Pro)' : ''}
+                                                                        </option>
+                                                                    );
+                                                                })}
                                                                 <option value="random">Random Year</option>
                                                             </select>
                                                         </div>
@@ -489,9 +530,14 @@ const Quizzes: React.FC = () => {
                                                                 onClick={(e) => e.stopPropagation()}
                                                                 className="w-full bg-gray-100 dark:bg-gray-700 border-gray-200 dark:border-slate-600 border rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
                                                             >
-                                                                {getYearsForSubject(subject).map(year => (
-                                                                    <option key={year} value={year}>{year}</option>
-                                                                ))}
+                                                                {getYearsForSubject(subject).map(year => {
+                                                                    const isLocked = !isPro && year !== 2000;
+                                                                    return (
+                                                                        <option key={year} value={year}>
+                                                                            {year} {isLocked ? '🔒 (Pro)' : ''}
+                                                                        </option>
+                                                                    );
+                                                                })}
                                                                 <option value="random">Random</option>
                                                             </select>
                                                         </div>
