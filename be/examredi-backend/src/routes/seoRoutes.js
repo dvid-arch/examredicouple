@@ -6,21 +6,25 @@ const router = express.Router();
 router.get('/sitemap.xml', async (req, res) => {
     try {
         const baseUrl = 'https://examredi.com';
-        
+
         // Fetch unique subjects and exam types for dynamic paths
         const [subjects, types] = await Promise.all([
             Paper.distinct('subject'),
             Paper.distinct('type')
         ]);
-        
+
         let xml = '<?xml version="1.0" encoding="UTF-8"?>';
         xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">';
-        
+
         // Static high-priority pages
         const staticPages = [
             { path: '', priority: '1.0', freq: 'daily' },
             { path: '/practice', priority: '0.9', freq: 'daily' },
-            { path: '/guides', priority: '0.8', freq: 'weekly' },
+            { path: '/study-guides', priority: '0.8', freq: 'daily' },
+            { path: '/question-search', priority: '0.8', freq: 'daily' },
+            { path: '/literature', priority: '0.7', freq: 'weekly' },
+            { path: '/dictionary', priority: '0.7', freq: 'weekly' },
+            { path: '/career-institutions', priority: '0.7', freq: 'weekly' },
             { path: '/login', priority: '0.5', freq: 'monthly' },
             { path: '/register', priority: '0.5', freq: 'monthly' }
         ];

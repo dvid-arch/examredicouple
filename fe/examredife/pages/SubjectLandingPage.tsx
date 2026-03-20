@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useSearchParams, Link } from 'react-router-dom';
 import { API_BASE_URL } from '../config.ts';
+import useSEO from '../hooks/useSEO.ts';
 
 interface SubjectData {
     subject: string;
@@ -39,6 +40,18 @@ const SubjectLandingPage: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
 
+    const minYear = data && data.years.length > 0 ? Math.min(...data.years) : 0;
+    const maxYear = data && data.years.length > 0 ? Math.max(...data.years) : 0;
+    const examTypeLabel = data ? data.types.join(' / ') : '';
+
+    useSEO({
+        title: data ? `${data.subject} Past Questions (${minYear}–${maxYear}) | ${examTypeLabel}` : 'Subject Past Questions',
+        description: data
+            ? `Practice with ${data.questionCount.toLocaleString()} real ${data.subject} exam questions from ${data.paperCount} past papers spanning ${minYear} to ${maxYear}.`
+            : 'Master your exams with AI-powered study guides and past questions on ExamRedi.',
+        keywords: data ? [data.subject, 'past questions', ...data.types] : []
+    });
+
     useEffect(() => {
         const fetchData = async () => {
             try {
@@ -73,16 +86,8 @@ const SubjectLandingPage: React.FC = () => {
         );
     }
 
-    const minYear = Math.min(...data.years);
-    const maxYear = Math.max(...data.years);
-    const examTypeLabel = data.types.join(' / ');
-    const pageTitle = `${data.subject} Past Questions (${minYear}–${maxYear}) | ${examTypeLabel} | ExamRedi`;
-
     return (
         <div className="bg-slate-50 min-h-screen">
-            {/* Update document title for SEO */}
-            {typeof document !== 'undefined' && (document.title = pageTitle)}
-
             {/* Header */}
             <header className="bg-white shadow-sm sticky top-0 z-20">
                 <div className="container mx-auto px-4 py-3 flex justify-between items-center">
@@ -224,12 +229,12 @@ const SubjectLandingPage: React.FC = () => {
                         <div className="flex justify-center gap-6 mt-3">
                             <Link to="/" className="hover:text-blue-600">Home</Link>
                             <Link to="/register" className="hover:text-blue-600">Register</Link>
-                            <Link to="/login" className="hover:text-blue-600">Login</Link>
+                            <Link to="/login" className="hover:text-blue-600">Log In</Link>
                         </div>
                     </div>
                 </footer>
             </main>
-        </div>
+        </div >
     );
 };
 

@@ -74,11 +74,15 @@ app.get('/api/health', (req, res) => {
     res.send('ExamRedi API is running!');
 });
 
-// Serve frontend static assets from build directory
+// SEO Routes (sitemap, etc.)
+app.use('/', seoRoutes);
+
+// SERVE FRONTEND STATIC ASSETS FROM BUILD DIRECTORY
 const feBuildPath = path.join(__dirname, '../../../fe/examredife/dist');
 console.log(`[DeploymentDebug] Looking for frontend at: ${feBuildPath}`);
 app.use(express.static(feBuildPath));
 
+// API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/data', dataRoutes);
 app.use('/api/ai', aiRoutes);
@@ -86,9 +90,6 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/flashcards', flashcardRoutes);
 app.use('/api/payments', paymentRoutes);
-
-// SEO Routes (sitemap, etc.)
-app.use('/', seoRoutes);
 
 // Public routes (no auth required - for SEO landing pages)
 app.use('/api/public', publicRoutes);
