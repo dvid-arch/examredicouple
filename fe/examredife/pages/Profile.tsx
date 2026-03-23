@@ -244,29 +244,88 @@ const Profile: React.FC = () => {
                         )}
 
                         <div id="referral" className="pt-6 border-t dark:border-slate-700">
-                            <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-3">Refer & Earn</h3>
-                            <div className="bg-primary/5 dark:bg-primary/10 rounded-xl p-4 border border-primary/20">
-                                <p className="text-xs text-slate-600 dark:text-slate-400 mb-2 font-medium">Your Unique Referral Code</p>
+                            <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-4 flex items-center gap-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+                                Affiliate Dashboard
+                            </h3>
+
+                            {/* Earning Stats */}
+                            <div className="grid grid-cols-2 gap-4 mb-6">
+                                <div className="bg-green-50 dark:bg-green-500/10 p-4 rounded-xl border border-green-100 dark:border-green-500/20">
+                                    <p className="text-[10px] uppercase font-bold text-green-600 dark:text-green-400 tracking-wider mb-1 text-center">Unlocked Balance</p>
+                                    <p className="text-2xl font-black text-slate-800 dark:text-white text-center">₦{(user.referralBalance || 0).toLocaleString()}</p>
+                                    <button className="w-full mt-2 py-1 text-[10px] font-bold bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors uppercase">Withdraw</button>
+                                </div>
+                                <div className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl border border-slate-200 dark:border-slate-700 relative group">
+                                    <div className="absolute top-2 right-2 cursor-help text-slate-400 hover:text-slate-600" title="This money is locked until your referred friends upgrade to Pro (₦2,500 Lifetime Access).">
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                    </div>
+                                    <p className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-wider mb-1 text-center flex items-center justify-center gap-1">
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+                                        Pending Rewards
+                                    </p>
+                                    <p className="text-2xl font-black text-slate-400 dark:text-slate-500 text-center">₦{(user.referralPending || 0).toLocaleString()}</p>
+                                    <p className="text-[9px] text-slate-400 text-center mt-2 italic">Earn ₦500 per Pro upgrade</p>
+                                </div>
+                            </div>
+
+                            <div className="bg-primary/5 dark:bg-primary/10 rounded-xl p-4 border border-primary/20 mb-6">
+                                <p className="text-xs text-slate-600 dark:text-slate-400 mb-2 font-medium">Your Unique Referral Link</p>
                                 <div className="flex items-center gap-2">
-                                    <div className="flex-1 bg-white dark:bg-slate-800 border-2 border-dashed border-primary/30 rounded-lg py-2 px-3 text-center font-mono font-bold tracking-wider text-primary text-xl">
-                                        {user.referralCode || 'EXAM-JOIN-US'}
+                                    <div className="flex-1 bg-white dark:bg-slate-800 border-2 border-dashed border-primary/30 rounded-lg py-2 px-3 text-center font-mono font-medium truncate text-primary text-sm">
+                                        {window.location.origin}/register?ref={user.referralCode}
                                     </div>
                                     <button
                                         onClick={() => {
                                             if (user.referralCode) {
-                                                navigator.clipboard.writeText(user.referralCode);
-                                                success("Referral code copied!");
+                                                const refLink = `${window.location.origin}/register?ref=${user.referralCode}`;
+                                                navigator.clipboard.writeText(refLink);
+                                                success("Referral link copied!");
                                             } else {
                                                 info("Your referral code is being generated. Please check back later.");
                                             }
                                         }}
-                                        className="bg-primary text-white p-2.5 rounded-lg hover:bg-accent transition-colors shadow-sm"
-                                        title="Copy Code"
+                                        className="bg-primary text-white p-2.5 rounded-lg hover:bg-accent transition-colors shadow-sm shrink-0"
+                                        title="Copy Link"
                                     >
                                         <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" /></svg>
                                     </button>
                                 </div>
-                                <p className="text-[10px] text-slate-500 mt-2 italic text-center">Share your code with friends to help them succeed!</p>
+                            </div>
+
+                            {/* Referral List */}
+                            <div className="space-y-3">
+                                <h4 className="text-xs font-bold text-slate-500 uppercase tracking-widest px-1">Recent Referrals</h4>
+                                {user.referredUsers && user.referredUsers.length > 0 ? (
+                                    <div className="max-h-48 overflow-y-auto space-y-2 pr-1 custom-scrollbar">
+                                        {user.referredUsers.map((ref, idx) => (
+                                            <div key={idx} className="flex items-center justify-between p-3 bg-white dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700 rounded-lg shadow-sm">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center font-bold text-slate-500 text-xs">
+                                                        {ref.name?.[0].toUpperCase() || '?'}
+                                                    </div>
+                                                    <div>
+                                                        <p className="text-sm font-bold text-slate-800 dark:text-white truncate max-w-[120px]">{ref.name}</p>
+                                                        <p className="text-[10px] text-slate-400">{ref.email.split('@')[0].slice(0, 3)}***@{ref.email.split('@')[1]}</p>
+                                                    </div>
+                                                </div>
+                                                <div className="text-right">
+                                                    <span className={`text-[9px] px-2 py-0.5 rounded-full font-bold uppercase tracking-tight ${ref.status === 'completed'
+                                                            ? 'bg-green-100 text-green-700 dar:bg-green-500/20'
+                                                            : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-500/20'
+                                                        }`}>
+                                                        {ref.status === 'completed' ? 'Unlocked' : 'Pending'}
+                                                    </span>
+                                                    <p className="text-[10px] font-mono mt-1 text-slate-500">₦{ref.reward}</p>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className="p-8 text-center border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-xl">
+                                        <p className="text-sm text-slate-400 italic">No referrals yet. Share your link to start earning!</p>
+                                    </div>
+                                )}
                             </div>
                         </div>
 

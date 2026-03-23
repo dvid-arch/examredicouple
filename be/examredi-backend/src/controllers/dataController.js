@@ -113,28 +113,44 @@ export const getPapers = async (req, res) => {
         }
 
         const isPro = req.user?.subscription === 'pro' || req.user?.role === 'admin';
+        const userLicenseYear = req.user?.licenseYear || new Date().getFullYear(); // Fallback to current year for legacy pro users
 
         // Apply access restriction
         if (!isPro) {
-            // Free users only get the "start year" which is 2024
+            // Free users only get 2024 (previously 2000, now switched to 2024 for better coverage)
             if (year && Number(year) !== 2024) {
                 return res.status(403).json({
-                    message: `Year ${year} is an ExamRedi Pro feature. Upgrade to unlock all years (1970 - 2024).`,
+                    message: `Year ${year} is an ExamRedi Pro feature. Upgrade to unlock all years.`,
                     isLocked: true
                 });
             }
             filter.year = 2024;
             console.log(`[DataDebug] Restriction applied: Only year 2024 allowed for free user.`);
         } else {
-            if (year) filter.year = Number(year);
-            console.log(`[DataDebug] Pro/Admin bypass - Full access granted.`);
+            // Pro/Admin bypass - Enforce Silent year-based lock for Pro (but not Admin)
+            if (req.user?.role !== 'admin') {
+                // Limit access to current year AND previous years
+                // Logic: PaperYear < userLicenseYear (e.g. register in 2026, get up to 2025)
+                if (year && Number(year) >= userLicenseYear) {
+                    return res.status(403).json({
+                        message: "This paper is part of a newer exam year. Please upgrade your license to access newer papers.",
+                        isLocked: true
+                    });
+                }
+
+                // If no year specified, filter papers by the cutoff
+                if (!filter.year) {
+                    filter.year = { $lt: userLicenseYear };
+                }
+            }
+            console.log(`[DataDebug] Pro Access - LicenseYear Cutoff applied.`);
         }
 
         console.log(`[DataDebug] Final DB Filter:`, JSON.stringify(filter));
 
         // Query MongoDB
         let papers = await Paper.find(filter).lean();
-        
+
         // Secondary safety: Strip explanations and further limit for non-pro
         if (!isPro) {
             papers = papers.map(paper => ({
@@ -182,9 +198,13 @@ export const searchPapers = async (req, res) => {
         };
 
         const isPro = req.user?.subscription === 'pro' || req.user?.role === 'admin';
+        const isAdmin = req.user?.role === 'admin';
+        const userLicenseYear = req.user?.licenseYear || new Date().getFullYear();
 
         if (!isPro) {
             filter.year = 2024;
+        } else if (!isAdmin) {
+            filter.year = { $lt: userLicenseYear };
         }
 
         // Database search using regex (case-insensitive)
@@ -214,6 +234,9 @@ export const searchPapers = async (req, res) => {
                     if (!isPro) {
                         delete result.explanation;
                         result.isLocked = paper.year !== 2024;
+                    } else if (!isAdmin && paper.year >= userLicenseYear) {
+                        delete result.explanation;
+                        result.isLocked = true;
                     }
 
                     results.push(result);
@@ -252,8 +275,14 @@ export const getQuestionById = async (req, res) => {
         };
 
         if (!isPro) {
+                        delete result.explanation;
+                        result.isLocked = paper.year !== 2024;
+                    } else if (!isAdmin && paper.year >= userLicenseYear) {
+                        delete result.explanation;
+                        result.isLocked = true;
+                    } else if (req.user?.role !== 'admin' && paper.year >= (req.user?.licenseYear || new Date().getFullYear())) {
             delete result.explanation;
-            result.isLocked = paper.year !== 2024;
+            result.isLocked = true;
         }
 
         res.json(result);
@@ -309,9 +338,13 @@ export const searchByTopic = async (req, res) => {
         }
 
         const isPro = req.user?.subscription === 'pro' || req.user?.role === 'admin';
+        const isAdmin = req.user?.role === 'admin';
+        const userLicenseYear = req.user?.licenseYear || new Date().getFullYear();
 
         if (!isPro) {
             filter.year = 2024;
+        } else if (!isAdmin) {
+            filter.year = { $lt: userLicenseYear };
         }
 
         const papers = await Paper.find(filter).lean();
@@ -336,6 +369,9 @@ export const searchByTopic = async (req, res) => {
                     if (!isPro) {
                         delete result.explanation;
                         result.isLocked = paper.year !== 2024;
+                    } else if (!isAdmin && paper.year >= userLicenseYear) {
+                        delete result.explanation;
+                        result.isLocked = true;
                     }
 
                     results.push(result);

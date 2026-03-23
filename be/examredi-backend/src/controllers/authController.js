@@ -72,10 +72,11 @@ export const registerUser = async (req, res) => {
 
         // Handle referral
         let referredBy = null;
+        let referrerDoc = null;
         if (incomingReferralCode) {
-            const referrer = await User.findOne({ referralCode: incomingReferralCode });
-            if (referrer) {
-                referredBy = referrer._id;
+            referrerDoc = await User.findOne({ referralCode: incomingReferralCode });
+            if (referrerDoc) {
+                referredBy = referrerDoc._id;
             }
         }
 
@@ -97,6 +98,19 @@ export const registerUser = async (req, res) => {
                 dailyGoal: 10
             }
         });
+
+        // Add to referrer's pending list
+        if (user && referrerDoc) {
+            referrerDoc.referredUsers.push({
+                userId: user._id,
+                name: user.name,
+                email: user.email,
+                status: 'pending',
+                reward: 500 // 500 NGN per referral
+            });
+            referrerDoc.referralPending += 500;
+            await referrerDoc.save();
+        }
 
         if (user) {
             // Generate Verification Token
@@ -431,8 +445,28 @@ export const handlePaymentWebhook = async (req, res) => {
             }
 
             user.subscription = 'pro';
+            user.subscriptionExpiry = null; // Lifetime access
+            user.licenseYear = new Date().getFullYear(); // Record the year of upgrade for paper lock logic
             user.aiCredits = 10; // Initial pro credits
             await user.save();
+
+            // Handle Referral Reward (Phase 2 Success)
+            if (user.referredBy) {
+                const referrer = await User.findById(user.referredBy);
+                if (referrer) {
+                    const referralEntry = referrer.referredUsers.find(ru =>
+                        ru.userId.toString() === user._id.toString() && ru.status === 'pending'
+                    );
+
+                    if (referralEntry) {
+                        referralEntry.status = 'completed';
+                        referrer.referralPending -= referralEntry.reward;
+                        referrer.referralBalance += referralEntry.reward;
+                        await referrer.save();
+                        console.log(`Referral reward of ${referralEntry.reward} unlocked for ${referrer.email}`);
+                    }
+                }
+            }
 
             console.log(`User ${userId} upgraded to Pro via Webhook`);
             return res.json({ success: true, message: 'Subscription upgraded' });

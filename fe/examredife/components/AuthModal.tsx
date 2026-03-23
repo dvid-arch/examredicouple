@@ -122,7 +122,11 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                         <button
                             type="button"
                             onClick={() => {
-                                window.location.href = `${API_BASE_URL}/auth/google`;
+                                const storedRef = sessionStorage.getItem('examRediRef');
+                                const googleUrl = storedRef
+                                    ? `${API_BASE_URL}/auth/google?ref=${storedRef}`
+                                    : `${API_BASE_URL}/auth/google`;
+                                window.location.href = googleUrl;
                             }}
                             className="w-full flex items-center justify-center gap-3 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-medium py-2.5 px-4 rounded-lg transition-colors shadow-sm"
                         >

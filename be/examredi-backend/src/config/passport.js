@@ -11,10 +11,11 @@ const configurePassport = (passport) => {
                     ? (process.env.BACKEND_URL.endsWith('/') ? `${process.env.BACKEND_URL}api/auth/google/callback` : `${process.env.BACKEND_URL}/api/auth/google/callback`)
                     : '/api/auth/google/callback',
                 proxy: true,
+                passReqToCallback: true // Crucial for referral tracking
             },
 
 
-            async (accessToken, refreshToken, profile, done) => {
+            async (req, accessToken, refreshToken, profile, done) => {
                 try {
                     const email = profile.emails[0].value;
                     const photoURL = profile.photos && profile.photos.length > 0 ? profile.photos[0].value : null;
@@ -37,6 +38,22 @@ const configurePassport = (passport) => {
                         return done(null, user);
                     }
 
+                    // Handle Referral for new user
+                    let referredBy = null;
+                    let referrerDoc = null;
+
+                    // Capture referral code from state (passed from frontend -> backend /google route)
+                    const incomingReferralCode = req.query.state;
+                    if (incomingReferralCode && incomingReferralCode.startsWith('ref_')) {
+                        const code = incomingReferralCode.replace('ref_', '');
+                        referrerDoc = await User.findOne({ referralCode: code });
+                        if (referrerDoc) {
+                            referredBy = referrerDoc._id;
+                        }
+                    }
+
+                    const newReferralCode = `EXAM-${Math.random().toString(36).substring(2, 9).toUpperCase()}`;
+
                     // Create new user if not found
                     user = await User.create({
                         name: profile.displayName || email.split('@')[0],
@@ -45,6 +62,8 @@ const configurePassport = (passport) => {
                         photoURL: photoURL,
                         isVerified: true, // Google accounts are pre-verified
                         subscription: 'free',
+                        referralCode: newReferralCode,
+                        referredBy,
                         role: 'user',
                         studyPlan: {
                             targetScore: 250,
@@ -52,6 +71,19 @@ const configurePassport = (passport) => {
                             dailyGoal: 10
                         }
                     });
+
+                    // Add to referrer's pending list
+                    if (user && referrerDoc) {
+                        referrerDoc.referredUsers.push({
+                            userId: user._id,
+                            name: user.name,
+                            email: user.email,
+                            status: 'pending',
+                            reward: 500
+                        });
+                        referrerDoc.referralPending += 500;
+                        await referrerDoc.save();
+                    }
 
                     return done(null, user);
                 } catch (error) {

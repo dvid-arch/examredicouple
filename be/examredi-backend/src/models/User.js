@@ -11,6 +11,20 @@ const userSchema = new mongoose.Schema({
     subscriptionExpiry: { type: Date }, // For Day Pass and expiring Pro plans
     referralCode: { type: String, unique: true, sparse: true },
     referredBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    licenseYear: { type: Number }, // Year the user upgraded to Pro (for paper access limitation)
+
+    // Referral Statistics
+    referralBalance: { type: Number, default: 0 }, // Unlocked earnings (NGN)
+    referralPending: { type: Number, default: 0 }, // Locked earnings (NGN)
+    referredUsers: [{
+        userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+        name: String,
+        email: String,
+        status: { type: String, enum: ['pending', 'completed'], default: 'pending' },
+        reward: { type: Number, default: 500 }, // Reward amount for this referral
+        createdAt: { type: Date, default: Date.now }
+    }],
+
     role: { type: String, enum: ['user', 'admin'], default: 'user' },
     preferredSubjects: { type: [String], default: [] },
     photoURL: { type: String },
@@ -83,14 +97,19 @@ userSchema.methods.matchPassword = async function (enteredPassword) {
     return await bcrypt.compare(enteredPassword, this.password);
 };
 
-// Pre-save hook to hash password
+// Pre-save hook to hash password and generate referral code
 userSchema.pre('save', async function () {
-    if (!this.isModified('password') || !this.password) {
-        return;
+    // 1. Handle Password Hashing
+    if (this.isModified('password') && this.password) {
+        const salt = await bcrypt.genSalt(10);
+        this.password = await bcrypt.hash(this.password, salt);
     }
 
-    const salt = await bcrypt.genSalt(10);
-    this.password = await bcrypt.hash(this.password, salt);
+    // 2. Generate Referral Code if missing
+    if (!this.referralCode) {
+        // Generate a unique referral code: EXAM-XXXXXXX
+        this.referralCode = `EXAM-${Math.random().toString(36).substring(2, 9).toUpperCase()}`;
+    }
 });
 
 import crypto from 'crypto';

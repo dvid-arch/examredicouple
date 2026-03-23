@@ -132,6 +132,16 @@ export interface User {
   subscription: 'free' | 'pro';
   subscriptionExpiry?: string;
   referralCode?: string;
+  referralBalance?: number;
+  referralPending?: number;
+  referredUsers?: Array<{
+    userId: string;
+    name: string;
+    email: string;
+    status: 'pending' | 'completed';
+    reward: number;
+    createdAt: string;
+  }>;
   photoURL?: string;
   aiCredits: number;
   dailyMessageCount: number;

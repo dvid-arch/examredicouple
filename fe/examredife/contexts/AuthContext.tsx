@@ -121,21 +121,31 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         return () => window.removeEventListener('popstate', handlePopState);
     }, []);
 
-    // --- Universal Auth Signaling ---
+    // --- Universal Auth Signaling & Referral Capture ---
     // Listen for ?auth=login or ?auth=register in the URL to auto-open the modal
-    // This is useful after redirects (e.g., from Reset Password or Email Verification)
+    // Also listen for ?ref=... to capture referral codes
     useEffect(() => {
         if (isLoading) return;
 
         const params = new URLSearchParams(location.search || location.hash.split('?')[1]);
-        const authAction = params.get('auth');
 
+        // 1. Capture Referral Code
+        const refCode = params.get('ref');
+        if (refCode) {
+            console.log('Referral Code Captured:', refCode);
+            sessionStorage.setItem('examRediRef', refCode);
+        }
+
+        // 2. Auto-open Auth Modal
+        const authAction = params.get('auth');
         if (authAction === 'login' && !isAuthenticated && !isAuthModalOpen) {
             console.log('Universal Auth Trigger: Opening login modal');
             window.history.pushState({ modal: 'auth' }, '');
             setIsAuthModalOpen(true);
+        }
 
-            // Clean up the URL to prevent re-triggering, keeping the same pathname
+        // Clean up URL parameters if needed, but keep ref for now so user sees it in address bar if they just arrived
+        if (authAction === 'login') {
             navigate(location.pathname, { replace: true });
         }
     }, [isLoading, isAuthenticated, isAuthModalOpen, location.search, location.hash, location.pathname, navigate]);
@@ -280,13 +290,24 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         }
     };
 
-    const register = async (details: AuthDetails & { referralCode?: string }) => {
+    const register = async (details: AuthDetails) => {
         try {
+            // Check for stored referral code if not in details
+            const storedRef = sessionStorage.getItem('examRediRef');
+            const finalDetails = {
+                ...details,
+                referralCode: details.referralCode || storedRef || undefined
+            };
+
             const data = await apiService('/auth/register', {
                 method: 'POST',
-                body: details,
+                body: finalDetails,
                 useAuth: false,
             });
+
+            // Clear ref after successful registration
+            sessionStorage.removeItem('examRediRef');
+
             setJustRegistered(true);
             await handleAuthSuccess(data);
         } catch (error: any) {
