@@ -94,14 +94,15 @@ app.use('/api/payments', paymentRoutes);
 // Public routes (no auth required - for SEO landing pages)
 app.use('/api/public', publicRoutes);
 
+// Catch-all route for explicit API unknown requests
+app.all('/api/*', (req, res) => {
+    res.status(404).json({ message: 'API route not found', error: 'Not Found', path: req.path });
+});
+
 // Catch-all route for React Browser Routing
 app.get('*', (req, res) => {
-    // If we're not handling an API route, serve the frontend
-    if (!req.path.startsWith('/api')) {
-        res.sendFile(path.join(feBuildPath, 'index.html'));
-    } else {
-        res.status(404).json({ message: 'API route not found' });
-    }
+    // Return HTML index so React Router handles the route
+    res.sendFile(path.join(feBuildPath, 'index.html'));
 });
 
 app.listen(port, () => {

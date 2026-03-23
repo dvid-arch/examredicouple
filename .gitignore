@@ -1,5 +1,8 @@
 # Folders to completely ignore
 mobile/
+er-mobile/
+mobile-flutter-legacy/
+
 EXAMREDI\ TRANSCRIPTIONS/
 scripts/
 

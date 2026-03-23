@@ -47,8 +47,9 @@ export default defineConfig(({ mode }) => {
           navigateFallbackDenylist: [/^\/api\//],
           runtimeCaching: [
             {
-              urlPattern: /^https:\/\/examredi-backend\.onrender\.com\//,
+              urlPattern: ({ url }) => url.pathname.startsWith('/api/'),
               handler: 'NetworkFirst',
+              method: 'GET',
               options: {
                 cacheName: 'api-cache',
                 expiration: {
