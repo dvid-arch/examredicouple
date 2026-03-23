@@ -24,6 +24,8 @@ const ChallengeIcon = (props: React.ComponentProps<"svg">) => <svg xmlns="http:/
 const CareerIcon = (props: React.ComponentProps<"svg">) => <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" {...props}><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>;
 const DictionaryIcon = (props: React.ComponentProps<"svg">) => <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" {...props}><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>;
 
+const InviteIcon = (props: React.ComponentProps<"svg">) => <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" {...props}><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>;
+
 const tiles = [
     { title: 'Practice For UTME', description: 'Simulate exams & create custom quizzes.', colorClass: 'bg-blue-500', path: '/practice', icon: <PracticeIcon />, tourId: 'practice-tile' },
     { title: 'Classroom', description: 'Access curated study guides and materials.', colorClass: 'bg-pink-500', path: '/study-guides', icon: <ClassroomIcon /> },
@@ -34,6 +36,7 @@ const tiles = [
     { title: 'UTME Challenge', description: 'Compete on the leaderboard in real-time.', colorClass: 'bg-red-500', path: '/challenge', icon: <ChallengeIcon /> },
     { title: 'Career & Institutions', description: 'Explore university and course information.', colorClass: 'bg-indigo-500', path: '/career-institutions', icon: <CareerIcon /> },
     { title: 'Dictionary', description: 'Look up words and definitions instantly.', colorClass: 'bg-teal-500', path: '/dictionary', icon: <DictionaryIcon /> },
+    { title: 'Refer a Friend', description: 'Invite others and help them succeed.', colorClass: 'bg-indigo-600', path: '/profile#referral', icon: <InviteIcon /> },
 ];
 
 // FIX: Changed icon prop type to be more specific, allowing React.cloneElement to pass a className without a type error.

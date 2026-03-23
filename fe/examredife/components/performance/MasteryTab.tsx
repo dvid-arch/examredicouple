@@ -55,7 +55,7 @@ export const MasteryTab: React.FC<MasteryTabProps> = ({ performanceBySubject, pe
                                     ? 'bg-white dark:bg-slate-800 shadow-md ring-2 ring-offset-2 dark:ring-offset-slate-900 border-transparent transform scale-[1.02]'
                                     : 'bg-white/50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 hover:bg-white dark:hover:bg-slate-800'
                                     }`}
-                                style={isSelected ? { ringColor: subjectColor } : {}}
+                                style={isSelected ? { '--tw-ring-color': subjectColor } as React.CSSProperties : {}}
                             >
                                 <div className="flex justify-between items-center mb-3">
                                     <div className="flex items-center gap-3">

@@ -243,6 +243,33 @@ const Profile: React.FC = () => {
                             </button>
                         )}
 
+                        <div id="referral" className="pt-6 border-t dark:border-slate-700">
+                            <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-3">Refer & Earn</h3>
+                            <div className="bg-primary/5 dark:bg-primary/10 rounded-xl p-4 border border-primary/20">
+                                <p className="text-xs text-slate-600 dark:text-slate-400 mb-2 font-medium">Your Unique Referral Code</p>
+                                <div className="flex items-center gap-2">
+                                    <div className="flex-1 bg-white dark:bg-slate-800 border-2 border-dashed border-primary/30 rounded-lg py-2 px-3 text-center font-mono font-bold tracking-wider text-primary text-xl">
+                                        {user.referralCode || 'EXAM-JOIN-US'}
+                                    </div>
+                                    <button
+                                        onClick={() => {
+                                            if (user.referralCode) {
+                                                navigator.clipboard.writeText(user.referralCode);
+                                                success("Referral code copied!");
+                                            } else {
+                                                info("Your referral code is being generated. Please check back later.");
+                                            }
+                                        }}
+                                        className="bg-primary text-white p-2.5 rounded-lg hover:bg-accent transition-colors shadow-sm"
+                                        title="Copy Code"
+                                    >
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" /></svg>
+                                    </button>
+                                </div>
+                                <p className="text-[10px] text-slate-500 mt-2 italic text-center">Share your code with friends to help them succeed!</p>
+                            </div>
+                        </div>
+
                         <div className="pt-6 border-t dark:border-slate-700">
                             <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-3">Study Goals</h3>
                             <div className="space-y-4 mb-4">

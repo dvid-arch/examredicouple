@@ -42,6 +42,7 @@ export interface Topic {
   order?: number;
   videos?: Video[];
   inlineQuestions?: InlineQuestion[];
+  isFree?: boolean;
 }
 
 export interface StudyGuide {
@@ -50,6 +51,7 @@ export interface StudyGuide {
   topics: Topic[];
   lastUpdated?: string;
   createdAt?: string;
+  isLimited?: boolean;
 }
 
 export interface Flashcard {
