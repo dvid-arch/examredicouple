@@ -21,7 +21,10 @@ import passport from 'passport';
 const router = express.Router();
 
 // Google OAuth Routes
-router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
+router.get('/google', passport.authenticate('google', {
+    scope: ['profile', 'email'],
+    prompt: 'select_account'
+}));
 router.get('/google/callback', (req, res, next) => {
     passport.authenticate('google', { session: false }, async (err, user, info) => {
         let frontendUrl = process.env.FRONTEND_URL || 'https://examredi.com';

@@ -4,14 +4,17 @@ import Card from '../../components/Card.tsx';
 import apiService from '../../services/apiService.ts';
 import { StudyGuide, Topic } from '../../types.ts';
 import { allStudyGuides } from '../../data/studyGuides.ts';
+import { useToasts } from '../../contexts/ToastContext.tsx';
 
 const GuideBuilder: React.FC = () => {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
 
     const [guide, setGuide] = useState<StudyGuide | null>(null);
+    const [initialGuide, setInitialGuide] = useState<StudyGuide | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
+    const { success, error: toastError } = useToasts();
 
     const [selectedTopicId, setSelectedTopicId] = useState<string | null>(null);
 
@@ -31,7 +34,9 @@ const GuideBuilder: React.FC = () => {
                 }
 
                 if (fetchedGuide) {
-                    setGuide(JSON.parse(JSON.stringify(fetchedGuide))); // Deep clone for safe editing
+                    const cloned = JSON.parse(JSON.stringify(fetchedGuide));
+                    setGuide(cloned);
+                    setInitialGuide(JSON.parse(JSON.stringify(fetchedGuide)));
                     if (fetchedGuide.topics && fetchedGuide.topics.length > 0) {
                         setSelectedTopicId(fetchedGuide.topics[0].id);
                     }
@@ -45,6 +50,20 @@ const GuideBuilder: React.FC = () => {
         fetchGuide();
     }, [id]);
 
+    const hasUnsavedChanges = JSON.stringify(guide) !== JSON.stringify(initialGuide);
+
+    // Warn on unsaved changes
+    useEffect(() => {
+        const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+            if (hasUnsavedChanges) {
+                e.preventDefault();
+                e.returnValue = '';
+            }
+        };
+        window.addEventListener('beforeunload', handleBeforeUnload);
+        return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+    }, [hasUnsavedChanges]);
+
     const activeTopic = guide?.topics?.find(t => t.id === selectedTopicId) || null;
 
     const handleSave = async () => {
@@ -55,11 +74,12 @@ const GuideBuilder: React.FC = () => {
                 method: 'PUT',
                 body: { ...guide, lastUpdated: new Date().toISOString().split('T')[0] }
             });
-            alert('Guide saved successfully!');
+            setInitialGuide(JSON.parse(JSON.stringify(guide)));
+            success('Guide saved successfully!');
         } catch (err) {
             console.error(err);
             const errorMsg = err instanceof Error ? err.message : 'Unknown error';
-            alert(`Failed to save guide: ${errorMsg}`);
+            toastError(`Failed to save guide: ${errorMsg}`);
         } finally {
             setIsSaving(false);
         }
@@ -109,7 +129,8 @@ const GuideBuilder: React.FC = () => {
 
     const deleteTopic = (topicId: string, e: React.MouseEvent) => {
         e.stopPropagation();
-        if (!guide || !window.confirm('Delete this topic permanently?')) return;
+        const topicToDelete = guide?.topics?.find(t => t.id === topicId);
+        if (!guide || !window.confirm(`Are you sure you want to remove "${topicToDelete?.title || 'this topic'}"? \n\nNote: Changes will not be permanent until you click "Save Changes".`)) return;
 
         setGuide(prev => {
             if (!prev) return prev;
@@ -120,6 +141,7 @@ const GuideBuilder: React.FC = () => {
         if (selectedTopicId === topicId) {
             setSelectedTopicId(null);
         }
+        success('Topic removed from list. Click "Save Changes" to persist.');
     };
 
     const moveTopic = (index: number, direction: 'up' | 'down', e: React.MouseEvent) => {
@@ -176,6 +198,11 @@ const GuideBuilder: React.FC = () => {
                         <span className="text-xs font-normal px-2 py-0.5 rounded-md bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 truncate max-w-[150px]">
                             {guide.subject}
                         </span>
+                        {hasUnsavedChanges && (
+                            <span className="animate-pulse bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300 text-[10px] font-bold px-2 py-0.5 rounded-full border border-amber-200 dark:border-amber-800">
+                                Unsaved Changes
+                            </span>
+                        )}
                     </h1>
                 </div>
                 <div className="flex gap-3 w-full sm:w-auto">

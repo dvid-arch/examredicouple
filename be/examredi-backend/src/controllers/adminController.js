@@ -199,19 +199,28 @@ export const addGuide = async (req, res) => {
 export const editGuide = async (req, res) => {
     try {
         const { id } = req.params;
+        console.log(`[Admin] Updating guide: ${id}`);
+        if (req.body.topics) {
+            console.log(`[Admin] Incoming topics count: ${req.body.topics.length}`);
+        }
+
         // Case-insensitive lookup for the ID slug
         const guide = await Guide.findOneAndUpdate(
             { id: { $regex: new RegExp('^' + id + '$', 'i') } },
             req.body,
-            { new: true }
+            { new: true, runValidators: true }
         );
 
         if (!guide) {
+            console.warn(`[Admin] Guide not found for update: ${id}`);
             return res.status(404).json({ message: `Guide not found (${id})` });
         }
+
+        console.log(`[Admin] Guide ${id} updated successfully. Saved topics: ${guide.topics?.length || 0}`);
         await syncBackups();
         res.json(guide);
     } catch (error) {
+        console.error(`[Admin] Error editing guide ${id}:`, error);
         res.status(500).json({ message: error.message || 'Error editing guide' });
     }
 };
