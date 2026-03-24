@@ -85,7 +85,14 @@ export const editUser = async (req, res) => {
         if (name) user.name = name;
         if (email) user.email = email;
         if (role) user.role = role;
-        if (subscription) user.subscription = subscription;
+        if (subscription) {
+            if (subscription === 'pro' && user.subscription !== 'pro') {
+                user.licenseYear = new Date().getFullYear();
+                user.aiCredits = (user.aiCredits || 0) + 10;
+                user.subscriptionExpiry = null;
+            }
+            user.subscription = subscription;
+        }
 
         await user.save();
 
@@ -93,7 +100,8 @@ export const editUser = async (req, res) => {
         delete safeUser.password;
         res.json(safeUser);
     } catch (error) {
-        res.status(500).json({ message: 'Error updating user' });
+        console.error(`[Admin] Error updating user ${req.params.id}:`, error);
+        res.status(500).json({ message: 'Error updating user', error: error.message });
     }
 };
 
@@ -132,6 +140,12 @@ export const updateUserSubscription = async (req, res) => {
             return res.status(403).json({ message: 'Cannot change an admin\'s subscription' });
         }
 
+        if (subscription === 'pro' && user.subscription !== 'pro') {
+            user.licenseYear = new Date().getFullYear();
+            user.aiCredits = (user.aiCredits || 0) + 10;
+            user.subscriptionExpiry = null;
+        }
+
         user.subscription = subscription;
         await user.save();
 
@@ -139,7 +153,12 @@ export const updateUserSubscription = async (req, res) => {
         delete safeUser.password;
         res.json(safeUser);
     } catch (error) {
-        res.status(500).json({ message: 'Error updating subscription' });
+        console.error(`[Admin] Error updating subscription for user ${req.params.id}:`, error);
+        res.status(500).json({
+            message: 'Error updating subscription',
+            error: error.message,
+            userId: req.params.id
+        });
     }
 };
 

@@ -89,7 +89,9 @@ const userSchema = new mongoose.Schema({
         lastActive: { type: Date, default: Date.now }
     }]
 }, {
-    timestamps: true
+    timestamps: true,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true }
 });
 
 // Method to compare passwords
