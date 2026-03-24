@@ -7,16 +7,15 @@ router.get('/sitemap.xml', async (req, res) => {
     try {
         const baseUrl = 'https://examredi.com';
 
-        // Fetch unique subjects and exam types for dynamic paths
-        const [subjects, types] = await Promise.all([
-            Paper.distinct('subject'),
-            Paper.distinct('type')
+        // Fetch subjects and their associated types to ONLY include valid combinations
+        const subjectData = await Paper.aggregate([
+            { $group: { _id: "$subject", types: { $addToSet: "$type" } } }
         ]);
 
         let xml = '<?xml version="1.0" encoding="UTF-8"?>';
-        xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">';
+        xml += '\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">';
 
-        // Static high-priority pages
+        // Static high-priority pages (Excluding Utility pages like /login /register)
         const staticPages = [
             { path: '', priority: '1.0', freq: 'daily' },
             { path: '/practice', priority: '0.9', freq: 'daily' },
@@ -24,9 +23,7 @@ router.get('/sitemap.xml', async (req, res) => {
             { path: '/question-search', priority: '0.8', freq: 'daily' },
             { path: '/literature', priority: '0.7', freq: 'weekly' },
             { path: '/dictionary', priority: '0.7', freq: 'weekly' },
-            { path: '/career-institutions', priority: '0.7', freq: 'weekly' },
-            { path: '/login', priority: '0.5', freq: 'monthly' },
-            { path: '/register', priority: '0.5', freq: 'monthly' }
+            { path: '/career-institutions', priority: '0.7', freq: 'weekly' }
         ];
 
         staticPages.forEach(p => {
@@ -38,9 +35,12 @@ router.get('/sitemap.xml', async (req, res) => {
   </url>`;
         });
 
-        // Dynamic Subject Past Questions Landing Pages (public, SEO-optimized)
-        subjects.forEach(subject => {
+        // Dynamic Subject Past Questions Landing Pages
+        subjectData.forEach(item => {
+            const subject = item._id;
             const slug = encodeURIComponent(subject.toLowerCase().replace(/\s+/g, '-'));
+
+            // Base Subject Page
             xml += `
   <url>
     <loc>${baseUrl}/past-questions/${slug}</loc>
@@ -48,8 +48,8 @@ router.get('/sitemap.xml', async (req, res) => {
     <priority>0.8</priority>
   </url>`;
 
-            // Include per exam type variants
-            types.forEach(type => {
+            // Only include type variants that ACTUALLY exist for this subject
+            item.types.forEach(type => {
                 const typeSlug = encodeURIComponent(type.toLowerCase());
                 xml += `
   <url>
@@ -67,6 +67,22 @@ router.get('/sitemap.xml', async (req, res) => {
         console.error('[Sitemap Error]:', error);
         res.status(500).end();
     }
+});
+
+// @desc    robots.txt
+// @route   GET /robots.txt
+router.get('/robots.txt', (req, res) => {
+    const robots = `User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /api/
+Disallow: /login
+Disallow: /register
+Disallow: /reset-password/
+
+Sitemap: https://examredi.com/sitemap.xml`;
+    res.header('Content-Type', 'text/plain');
+    res.send(robots);
 });
 
 export default router;

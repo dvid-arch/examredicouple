@@ -5,9 +5,10 @@ interface SEOProps {
     description?: string;
     canonical?: string;
     keywords?: string[];
+    noindex?: boolean;
 }
 
-const useSEO = ({ title, description, canonical, keywords }: SEOProps) => {
+const useSEO = ({ title, description, canonical, keywords, noindex }: SEOProps) => {
     useEffect(() => {
         // Handle Title
         const baseTitle = 'ExamRedi AI Study Platform';
@@ -34,6 +35,20 @@ const useSEO = ({ title, description, canonical, keywords }: SEOProps) => {
             metaKeywords.setAttribute('content', keywords.join(', '));
         }
 
+        // Handle Robots (Noindex)
+        let metaRobots = document.querySelector('meta[name="robots"]');
+        if (noindex) {
+            if (!metaRobots) {
+                metaRobots = document.createElement('meta');
+                metaRobots.setAttribute('name', 'robots');
+                document.head.appendChild(metaRobots);
+            }
+            metaRobots.setAttribute('content', 'noindex, nofollow');
+        } else if (metaRobots) {
+            // Remove it if not needed or set to index
+            metaRobots.setAttribute('content', 'index, follow');
+        }
+
         // Handle Canonical Link
         const currentPath = window.location.pathname;
         const defaultCanonical = `https://examredi.com${currentPath}`;
@@ -46,7 +61,7 @@ const useSEO = ({ title, description, canonical, keywords }: SEOProps) => {
             document.head.appendChild(linkCanonical);
         }
         linkCanonical.setAttribute('href', finalCanonical);
-    }, [title, description, canonical, keywords]);
+    }, [title, description, canonical, keywords, noindex]);
 };
 
 export default useSEO;

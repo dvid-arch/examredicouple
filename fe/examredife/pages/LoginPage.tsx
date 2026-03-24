@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import Card from '../components/Card.tsx';
+import useSEO from '../hooks/useSEO.ts';
 
 interface LoginPageProps {
     onLogin: () => void;
@@ -35,6 +36,12 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
         onLogin();
         navigate(from, { replace: true });
     };
+
+    useSEO({
+        title: 'Login',
+        description: 'Log in to your ExamRedi account to continue your studies.',
+        noindex: true
+    });
 
     return (
         <div className="min-h-screen bg-slate-100 dark:bg-gray-950 flex items-center justify-center p-4">

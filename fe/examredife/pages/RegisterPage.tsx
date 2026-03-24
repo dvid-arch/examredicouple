@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Card from '../components/Card.tsx';
 import { useAuth } from '../contexts/AuthContext.tsx';
+import useSEO from '../hooks/useSEO.ts';
 
 interface RegisterPageProps {
     onRegister: () => void;
@@ -27,6 +28,12 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onRegister }) => {
     const [password, setPassword] = useState('');
     const [referralCode, setReferralCode] = useState('');
     const navigate = useNavigate();
+
+    useSEO({
+        title: 'Register',
+        description: 'Create an ExamRedi account to start your journey to exam success.',
+        noindex: true
+    });
 
     const handleRegister = async (e: React.FormEvent) => {
         e.preventDefault();
