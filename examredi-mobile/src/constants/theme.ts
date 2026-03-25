@@ -3,53 +3,60 @@ import '@/global.css';
 import { Platform } from 'react-native';
 
 const Brand = {
-  primary: '#1A73E8',
-  primaryLight: '#E8F0FE',
-  primaryDark: '#1557B0',
-  secondary: '#EA4335',
-  accent: '#34A853',
-  slate950: '#0F172A',
-  slate900: '#111827',
-  slate800: '#1F2937',
-  slate700: '#374151',
-  slate600: '#4B5563',
-  slate500: '#6B7280',
-  slate300: '#CBD5E1',
-  slate200: '#E2E8F0',
-  slate100: '#F1F5F9',
+  primary: '#3B82F6', // Modern vibrant blue
+  primaryLight: '#EFF6FF',
+  primaryDark: '#1D4ED8',
+  secondary: '#10B981', // Emerald green for success/accent
+  accent: '#F59E0B',    // Amber for warnings/highlights
+  // Neutral palette (Slate/Zinc hybrid)
+  neutral950: '#020617',
+  neutral900: '#0F172A',
+  neutral800: '#1E293B',
+  neutral700: '#334155',
+  neutral600: '#475569',
+  neutral500: '#64748B',
+  neutral400: '#94A3B8',
+  neutral300: '#CBD5E1',
+  neutral200: '#E2E8F0',
+  neutral100: '#F1F5F9',
+  neutral50: '#F8FAFC',
   white: '#FFFFFF',
 } as const;
 
 export const Colors = {
   light: {
-    text: '#202124',
-    background: '#F8FAFC',
+    text: Brand.neutral900,
+    background: Brand.neutral50,
     backgroundElement: Brand.white,
     backgroundSelected: Brand.primaryLight,
-    textSecondary: '#5F6368',
+    textSecondary: Brand.neutral500,
     primary: Brand.primary,
     primaryLight: Brand.primaryLight,
     primaryDark: Brand.primaryDark,
     secondary: Brand.secondary,
     accent: Brand.accent,
     card: Brand.white,
-    border: Brand.slate200,
-    muted: Brand.slate100,
+    white: Brand.white,
+    border: Brand.neutral200,
+    muted: Brand.neutral100,
+    error: '#EF4444',
   },
   dark: {
-    text: '#F8FAFC',
-    background: Brand.slate950,
-    backgroundElement: Brand.slate900,
-    backgroundSelected: Brand.slate800,
-    textSecondary: '#94A3B8',
+    text: Brand.neutral100,
+    background: Brand.neutral950,
+    backgroundElement: Brand.neutral900,
+    backgroundSelected: Brand.neutral800,
+    textSecondary: Brand.neutral400,
     primary: '#60A5FA',
-    primaryLight: '#1E3A8A',
+    primaryLight: '#172554',
     primaryDark: '#93C5FD',
-    secondary: '#F87171',
-    accent: '#4ADE80',
-    card: Brand.slate900,
-    border: Brand.slate700,
-    muted: Brand.slate800,
+    secondary: '#34D399',
+    accent: '#FBBF24',
+    card: Brand.neutral900,
+    white: Brand.white,
+    border: Brand.neutral800,
+    muted: Brand.neutral800,
+    error: '#F87171',
   },
 } as const;
 
@@ -57,19 +64,22 @@ export type ThemeColor = keyof typeof Colors.light & keyof typeof Colors.dark;
 
 export const Fonts = Platform.select({
   ios: {
-    sans: 'Avenir Next',
+    display: 'Outfit-Bold',
+    sans: 'Inter-Regular',
     serif: 'ui-serif',
     rounded: 'ui-rounded',
     mono: 'ui-monospace',
   },
   default: {
+    display: 'sans-serif-medium',
     sans: 'sans-serif',
     serif: 'serif',
     rounded: 'sans-serif',
     mono: 'monospace',
   },
   web: {
-    sans: 'var(--font-display)',
+    display: 'var(--font-display)',
+    sans: 'var(--font-sans)',
     serif: 'var(--font-serif)',
     rounded: 'var(--font-rounded)',
     mono: 'var(--font-mono)',
@@ -77,37 +87,52 @@ export const Fonts = Platform.select({
 });
 
 export const Spacing = {
-  half: 2,
-  one: 4,
-  two: 8,
+  zero: 0,
+  quarter: 2,
+  half: 4,
+  one: 8,
+  two: 12,
   three: 16,
   four: 24,
   five: 32,
-  six: 64,
+  six: 48,
+  seven: 64,
+  eight: 96,
 } as const;
 
 export const Radius = {
+  none: 0,
+  xs: 4,
   sm: 8,
   md: 12,
   lg: 16,
   xl: 24,
+  '2xl': 32,
   full: 999,
 } as const;
 
 export const Elevation = {
+  none: { shadowOpacity: 0, elevation: 0 },
   card: {
-    shadowColor: '#0B1220',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.08,
-    shadowRadius: 16,
+    shadowColor: Brand.neutral950,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 12,
     elevation: 2,
   },
   soft: {
-    shadowColor: '#0B1220',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
+    shadowColor: Brand.neutral950,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.03,
+    shadowRadius: 6,
     elevation: 1,
+  },
+  premium: {
+    shadowColor: Brand.neutral950,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.08,
+    shadowRadius: 24,
+    elevation: 4,
   },
 } as const;
 

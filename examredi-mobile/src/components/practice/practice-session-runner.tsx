@@ -1,9 +1,6 @@
 import React from 'react';
-import { Alert, Pressable, StyleSheet, View } from 'react-native';
-
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { AppButton, AppCard } from '@/components/ui';
+import { Alert, Pressable, StyleSheet, View, ScrollView } from 'react-native';
+import { AppButton, AppCard, AppText, AppGlassView } from '@/components/ui';
 import { Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import {
@@ -11,6 +8,7 @@ import {
   PreparedPracticeSession,
   SubjectPerformanceBreakdown,
 } from '@/types/practice';
+import * as Haptics from 'expo-haptics';
 
 type PracticeSessionRunnerProps = {
   session: PreparedPracticeSession;
@@ -33,32 +31,20 @@ export function PracticeSessionRunner({
   const [index, setIndex] = React.useState(0);
   const [answers, setAnswers] = React.useState<Record<string, string>>({});
   const [isSubmitted, setIsSubmitted] = React.useState(false);
-  const [syncState, setSyncState] = React.useState<
-    'idle' | 'saving' | 'saved' | 'failed'
-  >('idle');
+  const [syncState, setSyncState] = React.useState<'idle' | 'saving' | 'saved' | 'failed'>('idle');
 
   const completionSentRef = React.useRef(false);
-
   const totalQuestions = session.questions.length;
   const currentQuestion = session.questions[index];
-  const selectedOption = currentQuestion
-    ? answers[currentQuestion.id]
-    : undefined;
+  const selectedOption = currentQuestion ? answers[currentQuestion.id] : undefined;
+  const mode = session.setup.mode;
 
-  const modeDurationSeconds = Math.max(
-    0,
-    Number(session.setup.durationMinutes || '0') * 60,
-  );
-
+  const modeDurationSeconds = Math.max(0, Number(session.setup.durationMinutes || '0') * 60);
   const [secondsLeft, setSecondsLeft] = React.useState(modeDurationSeconds);
 
   React.useEffect(() => {
-    if (session.setup.mode === 'study') {
-      return;
-    }
-
-    if (isSubmitted || secondsLeft <= 0) {
-      if (!isSubmitted && secondsLeft <= 0) {
+    if (mode === 'study' || isSubmitted || secondsLeft <= 0) {
+      if (!isSubmitted && secondsLeft <= 0 && mode !== 'study') {
         setIsSubmitted(true);
       }
       return;
@@ -69,610 +55,339 @@ export function PracticeSessionRunner({
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [isSubmitted, secondsLeft, session.setup.mode]);
+  }, [isSubmitted, secondsLeft, mode]);
 
-  const progress =
-    totalQuestions === 0 ? 0 : Math.round(((index + 1) / totalQuestions) * 100);
-
-  const score = React.useMemo(() => {
-    return session.questions.reduce((total, question) => {
-      return answers[question.id] === question.answer ? total + 1 : total;
-    }, 0);
+  const progress = totalQuestions === 0 ? 0 : Math.round(((index + 1) / totalQuestions) * 100);
+  const answeredCount = React.useMemo(() => {
+    return session.questions.reduce((count, question) => answers[question.id] ? count + 1 : count, 0);
   }, [answers, session.questions]);
 
-  const answeredCount = React.useMemo(() => {
-    return session.questions.reduce((count, question) => {
-      return answers[question.id] ? count + 1 : count;
-    }, 0);
+  // Mode UI Config
+  const modeConfig = {
+    study: { color: theme.primary, label: 'Study Mode', icon: '📚' },
+    practice: { color: theme.secondary, label: 'Practice Mode', icon: '✏️' },
+    mock: { color: theme.accent, label: 'Mock Exam', icon: '🎯' },
+  }[mode];
+
+  const handleOptionSelect = (key: string) => {
+    if (isSubmitted) return;
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setAnswers(prev => ({ ...prev, [currentQuestion.id]: key }));
+  };
+
+  const handleExitSession = () => {
+    if (isSubmitted) { onReset(); return; }
+    Alert.alert('Exit session?', 'Your progress will be lost.', [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Exit', style: 'destructive', onPress: onReset },
+    ]);
+  };
+
+  const score = React.useMemo(() => {
+    return session.questions.reduce((total, q) => answers[q.id] === q.answer ? total + 1 : total, 0);
   }, [answers, session.questions]);
 
   const completionPayload = React.useMemo<PracticeSessionCompletion>(() => {
     const subjectBreakdown: SubjectPerformanceBreakdown = {};
     const incorrectQuestions: string[] = [];
-
-    session.questions.forEach((question) => {
-      const key = question.subject;
-      if (!subjectBreakdown[key]) {
-        subjectBreakdown[key] = { correct: 0, total: 0 };
-      }
-
-      subjectBreakdown[key].total += 1;
-
-      if (answers[question.id] === question.answer) {
-        subjectBreakdown[key].correct += 1;
-      } else {
-        incorrectQuestions.push(question.id);
-      }
+    session.questions.forEach((q) => {
+      if (!subjectBreakdown[q.subject]) subjectBreakdown[q.subject] = { correct: 0, total: 0 };
+      subjectBreakdown[q.subject].total += 1;
+      if (answers[q.id] === q.answer) subjectBreakdown[q.subject].correct += 1;
+      else incorrectQuestions.push(q.id);
     });
-
-    const percentage =
-      totalQuestions > 0 ? Math.round((score / totalQuestions) * 100) : 0;
-
     return {
       sessionId: session.id,
       setup: session.setup,
       score,
       totalQuestions,
-      percentage,
+      percentage: totalQuestions > 0 ? Math.round((score / totalQuestions) * 100) : 0,
       completedAt: Date.now(),
       subjectBreakdown,
       incorrectQuestions,
     };
-  }, [
-    answers,
-    score,
-    session.id,
-    session.questions,
-    session.setup,
-    totalQuestions,
-  ]);
+  }, [answers, score, session, totalQuestions]);
 
   React.useEffect(() => {
-    if (!isSubmitted || !onComplete || completionSentRef.current) {
-      return;
-    }
-
+    if (!isSubmitted || !onComplete || completionSentRef.current) return;
     completionSentRef.current = true;
     setSyncState('saving');
-
-    onComplete(completionPayload)
-      .then(() => {
-        setSyncState('saved');
-      })
-      .catch(() => {
-        setSyncState('failed');
-      });
-  }, [completionPayload, isSubmitted, onComplete]);
-
-  const handleExitSession = React.useCallback(() => {
-    if (isSubmitted) {
-      onReset();
-      return;
-    }
-
-    const hasProgress = answeredCount > 0 || index > 0;
-
-    if (!hasProgress) {
-      onReset();
-      return;
-    }
-
-    Alert.alert(
-      'Exit practice?',
-      'Your current progress will be lost if you exit now.',
-      [
-        { text: 'Continue', style: 'cancel' },
-        {
-          text: 'Exit',
-          style: 'destructive',
-          onPress: onReset,
-        },
-      ],
-    );
-  }, [answeredCount, index, isSubmitted, onReset]);
-
-  if (totalQuestions === 0) {
-    return (
-      <AppCard>
-        <ThemedText type="smallBold">No questions available</ThemedText>
-        <ThemedText style={styles.metaText} themeColor="textSecondary">
-          Try adjusting the year range or selected subjects to include available
-          papers.
-        </ThemedText>
-        <AppButton label="Back to setup" variant="outline" onPress={onReset} />
-      </AppCard>
-    );
-  }
+    onComplete(completionPayload).then(() => setSyncState('saved')).catch(() => setSyncState('failed'));
+  }, [isSubmitted, onComplete, completionPayload]);
 
   if (isSubmitted) {
-    const percentage = Math.round((score / totalQuestions) * 100);
-    const scoreColor =
-      percentage >= 70
-        ? theme.accent
-        : percentage >= 50
-          ? theme.secondary
-          : '#EF4444';
+    const percentage = completionPayload.percentage;
+    const scoreColor = percentage >= 70 ? theme.secondary : percentage >= 50 ? theme.accent : theme.error;
 
     return (
-      <AppCard>
-        <ThemedText type="smallBold">🎉 Session complete!</ThemedText>
-        <ThemedText style={styles.metaText} themeColor="textSecondary">
-          {session.setup.mode.toUpperCase()} mode ·{' '}
-          {session.setup.subjects.join(', ')}
-        </ThemedText>
-
-        <ThemedView
-          type="backgroundElement"
-          style={[
-            styles.scoreBox,
-            { borderTopColor: scoreColor, borderTopWidth: 4 },
-          ]}
-        >
-          <ThemedText style={[styles.scorePercentage, { color: scoreColor }]}>
-            {percentage}%
-          </ThemedText>
-          <ThemedText themeColor="textSecondary">
-            {score} of {totalQuestions} questions correct
-          </ThemedText>
-          {syncState === 'saving' ? (
-            <ThemedText type="caption" themeColor="textSecondary">
-              💾 Saving your result...
-            </ThemedText>
-          ) : null}
-          {syncState === 'saved' ? (
-            <ThemedText type="caption" style={styles.successText}>
-              ✅ Result saved to your performance history
-            </ThemedText>
-          ) : null}
-          {syncState === 'failed' ? (
-            <ThemedText type="caption" style={styles.warningText}>
-              ⚠️ Could not save this result right now
-            </ThemedText>
-          ) : null}
-        </ThemedView>
-
-        <ThemedText type="smallBold" style={styles.breakdownTitle}>
-          📊 Subject Breakdown
-        </ThemedText>
-        <View style={styles.breakdownWrap}>
-          {Object.entries(completionPayload.subjectBreakdown).map(
-            ([subject, stats]) => {
-              const subjectPercent = Math.round(
-                (stats.correct / stats.total) * 100,
-              );
-
-              return (
-                <View key={subject} style={styles.breakdownItem}>
-                  <View style={styles.breakdownLeft}>
-                    <ThemedText type="caption">{subject}</ThemedText>
-                    <View
-                      style={[
-                        styles.progressBar,
-                        { backgroundColor: theme.backgroundSelected },
-                      ]}
-                    >
-                      <View
-                        style={[
-                          styles.progressFill,
-                          {
-                            width: `${subjectPercent}%`,
-                            backgroundColor: theme.primary,
-                          },
-                        ]}
-                      />
-                    </View>
+      <AppCard style={styles.resultCard}>
+        <AppText variant="h2" align="center">🎉 Finished!</AppText>
+        <View style={[styles.scoreCircle, { borderColor: scoreColor }]}>
+          <AppText variant="h1" style={{ color: scoreColor }}>{percentage}%</AppText>
+          <AppText variant="caption" color="textSecondary">{score} / {totalQuestions}</AppText>
+        </View>
+        
+        <View style={styles.breakdownList}>
+          {Object.entries(completionPayload.subjectBreakdown).map(([subject, stats]) => {
+            const p = Math.round((stats.correct / stats.total) * 100);
+            return (
+              <View key={subject} style={styles.breakdownItem}>
+                <View style={{ flex: 1 }}>
+                  <AppText variant="bodyBold">{subject}</AppText>
+                  <View style={styles.miniProgressTrack}>
+                    <View style={[styles.miniProgressFill, { width: `${p}%`, backgroundColor: theme.primary }]} />
                   </View>
-                  <ThemedText type="smallBold">{subjectPercent}%</ThemedText>
                 </View>
-              );
-            },
-          )}
+                <AppText variant="bodyBold">{p}%</AppText>
+              </View>
+            );
+          })}
         </View>
 
-        <View style={styles.rowActions}>
-          <AppButton
-            label="New Setup"
-            variant="outline"
-            onPress={onReset}
-            style={styles.actionButton}
-          />
-          <AppButton
-            label="Retake"
-            onPress={() => {
-              setAnswers({});
-              setIndex(0);
-              setIsSubmitted(false);
-              setSecondsLeft(modeDurationSeconds);
-              setSyncState('idle');
-              completionSentRef.current = false;
-            }}
-            style={styles.actionButton}
-          />
+        <View style={styles.resultActions}>
+          <AppButton label="New Session" variant="outline" onPress={onReset} style={{ flex: 1 }} />
+          <AppButton label="Review" variant="primary" style={{ flex: 1 }} />
         </View>
       </AppCard>
     );
   }
 
-  const optionEntries = Object.entries(currentQuestion.options ?? {});
-  const timerColor =
-    secondsLeft <= 60
-      ? theme.secondary
-      : secondsLeft <= 300
-        ? theme.accent
-        : theme.primary;
+  const timerColor = secondsLeft <= 60 ? theme.error : secondsLeft <= 300 ? theme.accent : theme.textSecondary;
 
   return (
-    <AppCard>
-      <View style={styles.headerRow}>
-        <View>
-          <ThemedText type="smallBold">
-            Question {index + 1} of {totalQuestions}
-          </ThemedText>
-          <ThemedText type="caption" themeColor="textSecondary">
-            {currentQuestion.subject} • {currentQuestion.year}
-          </ThemedText>
+    <View style={styles.container}>
+      {/* Mode Header */}
+      <AppGlassView intensity={10} style={[styles.modeHeader, { borderLeftColor: modeConfig.color, borderLeftWidth: 4 }]}>
+        <View style={styles.headerInfo}>
+          <AppText variant="label" color="textSecondary">{modeConfig.icon} {modeConfig.label}</AppText>
+          <AppText variant="h3">{currentQuestion.subject}</AppText>
         </View>
-        <View style={styles.headerActions}>
-          {session.setup.mode !== 'study' ? (
-            <ThemedView
-              type="backgroundElement"
-              style={[
-                styles.timerPill,
-                { borderColor: timerColor, borderWidth: 2 },
-              ]}
-            >
-              <ThemedText style={[styles.timerText, { color: timerColor }]}>
-                ⏱️ {formatMinutes(secondsLeft)}
-              </ThemedText>
-            </ThemedView>
-          ) : null}
-          <Pressable onPress={handleExitSession} style={styles.exitPressable}>
-            <ThemedView
-              type="backgroundElement"
-              style={[styles.exitPill, { borderColor: theme.border }]}
-            >
-              <ThemedText type="caption" themeColor="textSecondary">
-                Exit
-              </ThemedText>
-            </ThemedView>
+        <View style={styles.headerControls}>
+          {mode !== 'study' && (
+            <AppText variant="bodyBold" style={{ color: timerColor }}>{formatMinutes(secondsLeft)}</AppText>
+          )}
+          <Pressable onPress={handleExitSession} style={styles.exitBtn}>
+            <AppText variant="caption" color="textSecondary">Exit</AppText>
           </Pressable>
         </View>
-      </View>
+      </AppGlassView>
 
-      {/* Progress Bar */}
-      <View style={styles.progressSection}>
-        <View
-          style={[
-            styles.progressTrack,
-            { backgroundColor: theme.backgroundSelected },
-          ]}
-        >
-          <View
-            style={[
-              styles.progressFill,
-              { width: `${progress}%`, backgroundColor: theme.primary },
-            ]}
-          />
-        </View>
-        <ThemedText
-          type="caption"
-          themeColor="textSecondary"
-          style={styles.progressLabel}
-        >
-          {answeredCount}/{totalQuestions} answered • {progress}% complete
-        </ThemedText>
-      </View>
-
-      {/* Question Navigator Pills */}
-      <ThemedText
-        type="caption"
-        style={styles.navigatorLabel}
-        themeColor="textSecondary"
-      >
-        Jump to question
-      </ThemedText>
-      <View style={styles.questionPills}>
-        {session.questions.map((question, questionIndex) => {
-          const hasAnswer = Boolean(answers[question.id]);
-          const isActive = questionIndex === index;
-          const isCorrect =
-            hasAnswer && answers[question.id] === question.answer;
-
-          return (
-            <Pressable
-              key={question.id}
-              onPress={() => setIndex(questionIndex)}
-              style={styles.pillPressable}
-            >
-              <ThemedView
-                type={
-                  isActive
-                    ? 'backgroundSelected'
-                    : isCorrect
-                      ? 'backgroundSelected'
-                      : 'backgroundElement'
-                }
+      {/* Horizontal Navigator */}
+      <View style={styles.navContainer}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.navScroll}>
+          {session.questions.map((q, idx) => {
+            const isCurrent = idx === index;
+            const isAnswered = !!answers[q.id];
+            return (
+              <Pressable 
+                key={q.id} 
+                onPress={() => setIndex(idx)}
                 style={[
-                  styles.questionPill,
-                  isActive && { borderColor: theme.primary, borderWidth: 2 },
-                  isCorrect && { borderColor: theme.accent, borderWidth: 2 },
+                  styles.navPill,
+                  isCurrent && { backgroundColor: theme.primary, borderColor: theme.primary },
+                  !isCurrent && isAnswered && { borderColor: theme.primary },
+                  !isCurrent && !isAnswered && { borderColor: theme.border },
                 ]}
               >
-                <ThemedText type="caption" style={styles.pillText}>
-                  {questionIndex + 1}
-                </ThemedText>
-              </ThemedView>
-            </Pressable>
-          );
-        })}
+                <AppText variant="caption" style={{ color: isCurrent ? 'white' : theme.text }}>{idx + 1}</AppText>
+              </Pressable>
+            );
+          })}
+        </ScrollView>
       </View>
 
-      {/* Question Text */}
-      <ThemedText style={styles.questionText}>
-        {currentQuestion.question}
-      </ThemedText>
-
-      {/* Options */}
-      <View style={styles.optionsList}>
-        {optionEntries.map(([key, option]) => {
-          const active = selectedOption === key;
-          const isCorrect = key === currentQuestion.answer;
-          const showCorrect = selectedOption && isCorrect;
-
-          return (
-            <Pressable
-              key={key}
-              onPress={() =>
-                setAnswers((current) => ({
-                  ...current,
-                  [currentQuestion.id]: key,
-                }))
-              }
-              style={styles.optionPressable}
-            >
-              <View
+      {/* Question Card */}
+      <AppCard style={styles.questionCard}>
+        <AppText variant="bodyBold" style={styles.questionText}>{currentQuestion.question}</AppText>
+        
+        <View style={styles.optionsList}>
+          {Object.entries(currentQuestion.options).map(([key, opt]) => {
+            const isSelected = selectedOption === key;
+            const isCorrect = key === currentQuestion.answer;
+            const showFeedback = (mode === 'study' && selectedOption) || (isSubmitted);
+            
+            return (
+              <Pressable 
+                key={key} 
+                onPress={() => handleOptionSelect(key)}
                 style={[
-                  styles.optionBox,
-                  {
-                    backgroundColor: active
-                      ? theme.primaryLight
-                      : showCorrect
-                        ? theme.muted
-                        : theme.backgroundElement,
-                    borderColor: showCorrect ? theme.accent : theme.border,
-                    borderWidth: showCorrect ? 2 : 1,
-                  },
+                  styles.optionBtn,
+                  { backgroundColor: theme.backgroundElement, borderColor: theme.border },
+                  isSelected && { borderColor: theme.primary, borderWidth: 2 },
+                  showFeedback && isCorrect && { borderColor: theme.secondary, borderWidth: 2, backgroundColor: theme.secondary + '10' },
+                  showFeedback && isSelected && !isCorrect && { borderColor: theme.error, borderWidth: 2, backgroundColor: theme.error + '10' },
                 ]}
               >
-                <ThemedText type="smallBold">{key}</ThemedText>
-                <ThemedText style={styles.optionText}>{option.text}</ThemedText>
-              </View>
-            </Pressable>
-          );
-        })}
-      </View>
-
-      {/* Feedback Section */}
-      {selectedOption ? (
-        <View style={styles.feedbackBox}>
-          {selectedOption === currentQuestion.answer ? (
-            <>
-              <ThemedText style={styles.successText}>
-                ✅ Correct answer!
-              </ThemedText>
-            </>
-          ) : (
-            <>
-              <ThemedText style={styles.warningText}>
-                ❌ Incorrect. The correct answer is {currentQuestion.answer}.
-              </ThemedText>
-            </>
-          )}
-
-          {currentQuestion.explanation ? (
-            <ThemedText
-              type="caption"
-              themeColor="textSecondary"
-              style={styles.explanationText}
-            >
-              💡 {currentQuestion.explanation}
-            </ThemedText>
-          ) : null}
+                <View style={[styles.optionKey, isSelected && { backgroundColor: theme.primary }]}>
+                  <AppText variant="label" style={{ color: isSelected ? 'white' : theme.text }}>{key}</AppText>
+                </View>
+                <AppText style={styles.optionLabel}>{opt.text}</AppText>
+              </Pressable>
+            );
+          })}
         </View>
-      ) : null}
 
-      {/* Navigation */}
-      <View style={styles.rowActions}>
-        <AppButton
-          label="← Previous"
-          variant="outline"
-          disabled={index === 0}
-          onPress={() => setIndex((current) => Math.max(0, current - 1))}
-          style={styles.actionButton}
+        {/* Study Mode Feedback */}
+        {mode === 'study' && selectedOption && (
+          <AppGlassView intensity={5} style={styles.feedbackBox}>
+            <AppText variant="bodyBold" color={selectedOption === currentQuestion.answer ? 'secondary' : 'error'}>
+              {selectedOption === currentQuestion.answer ? '✅ Correct' : '❌ Incorrect'}
+            </AppText>
+            {currentQuestion.explanation && (
+              <AppText variant="caption" color="textSecondary" style={styles.explanation}>
+                {currentQuestion.explanation}
+              </AppText>
+            )}
+          </AppGlassView>
+        )}
+      </AppCard>
+
+      {/* Footer Nav */}
+      <View style={styles.footer}>
+        <AppButton 
+          label="Previous" 
+          variant="ghost" 
+          disabled={index === 0} 
+          onPress={() => setIndex(i => i - 1)} 
+          style={{ flex: 1 }}
         />
-        {index + 1 >= totalQuestions ? (
-          <AppButton
-            label="Submit →"
-            onPress={() => setIsSubmitted(true)}
-            style={styles.actionButton}
-          />
+        <AppText variant="caption" color="textSecondary">{index + 1} / {totalQuestions}</AppText>
+        {index === totalQuestions - 1 ? (
+          <AppButton label="Submit" variant="primary" onPress={() => setIsSubmitted(true)} style={{ flex: 1 }} />
         ) : (
-          <AppButton
-            label="Next →"
-            onPress={() =>
-              setIndex((current) => Math.min(totalQuestions - 1, current + 1))
-            }
-            style={styles.actionButton}
-          />
+          <AppButton label="Next" variant="primary" onPress={() => setIndex(i => i + 1)} style={{ flex: 1 }} />
         )}
       </View>
-    </AppCard>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  metaText: {
-    marginTop: Spacing.one,
-    marginBottom: Spacing.three,
+  container: {
+    gap: Spacing.four,
   },
-  scoreBox: {
-    borderRadius: Radius.lg,
+  modeHeader: {
     padding: Spacing.three,
-    marginBottom: Spacing.three,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
+  },
+  headerInfo: {
+    gap: Spacing.quarter,
+  },
+  headerControls: {
+    alignItems: 'flex-end',
     gap: Spacing.one,
   },
-  scorePercentage: {
-    fontSize: 48,
-    fontWeight: 'bold',
-    lineHeight: 52,
+  exitBtn: {
+    paddingHorizontal: Spacing.two,
+    paddingVertical: 2,
+    borderRadius: Radius.full,
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.1)',
   },
-  successText: {
-    color: '#166534',
-    fontWeight: '600',
+  navContainer: {
+    height: 44,
   },
-  warningText: {
-    color: '#92400E',
-    fontWeight: '600',
-  },
-  breakdownTitle: {
-    marginTop: Spacing.three,
-    marginBottom: Spacing.two,
-  },
-  breakdownWrap: {
+  navScroll: {
+    paddingHorizontal: Spacing.two,
     gap: Spacing.two,
-    marginBottom: Spacing.three,
+    alignItems: 'center',
+  },
+  navPill: {
+    width: 36,
+    height: 36,
+    borderRadius: Radius.full,
+    borderWidth: 1.5,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  questionCard: {
+    padding: Spacing.four,
+    minHeight: 300,
+  },
+  questionText: {
+    fontSize: 17,
+    lineHeight: 26,
+    marginBottom: Spacing.four,
+  },
+  optionsList: {
+    gap: Spacing.two,
+  },
+  optionBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: Spacing.three,
+    borderRadius: Radius.md,
+    borderWidth: 1,
+    gap: Spacing.three,
+  },
+  optionKey: {
+    width: 28,
+    height: 28,
+    borderRadius: Radius.sm,
+    backgroundColor: 'rgba(0,0,0,0.05)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  optionLabel: {
+    flex: 1,
+    fontSize: 15,
+  },
+  feedbackBox: {
+    marginTop: Spacing.four,
+    padding: Spacing.three,
+    gap: Spacing.one,
+  },
+  explanation: {
+    marginTop: Spacing.one,
+    lineHeight: 18,
+  },
+  footer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.four,
+    paddingVertical: Spacing.two,
+  },
+  resultCard: {
+    padding: Spacing.six,
+    alignItems: 'center',
+    gap: Spacing.four,
+  },
+  scoreCircle: {
+    width: 140,
+    height: 140,
+    borderRadius: 70,
+    borderWidth: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginVertical: Spacing.two,
+  },
+  breakdownList: {
+    width: '100%',
+    gap: Spacing.three,
+    marginTop: Spacing.two,
   },
   breakdownItem: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    gap: Spacing.two,
-    paddingVertical: Spacing.one,
+    gap: Spacing.four,
   },
-  breakdownLeft: {
-    flex: 1,
-    gap: Spacing.one,
-  },
-  progressBar: {
-    height: 6,
+  miniProgressTrack: {
+    height: 4,
     borderRadius: Radius.full,
+    backgroundColor: 'rgba(0,0,0,0.05)',
+    marginTop: Spacing.one,
     overflow: 'hidden',
   },
-  rowActions: {
-    flexDirection: 'row',
-    gap: Spacing.two,
-  },
-  actionButton: {
-    flex: 1,
-  },
-  headerRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    gap: Spacing.two,
-  },
-  headerActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.one,
-  },
-  timerPill: {
-    borderRadius: Radius.full,
-    paddingHorizontal: Spacing.two,
-    paddingVertical: Spacing.one,
-  },
-  exitPressable: {
-    borderRadius: Radius.full,
-  },
-  exitPill: {
-    borderRadius: Radius.full,
-    borderWidth: 1,
-    paddingHorizontal: Spacing.two,
-    paddingVertical: Spacing.one,
-  },
-  timerText: {
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  progressSection: {
-    marginTop: Spacing.three,
-    gap: Spacing.one,
-  },
-  progressTrack: {
-    height: 8,
-    borderRadius: Radius.full,
-    overflow: 'hidden',
-  },
-  progressFill: {
+  miniProgressFill: {
     height: '100%',
     borderRadius: Radius.full,
   },
-  progressLabel: {
-    fontSize: 11,
-  },
-  navigatorLabel: {
-    marginTop: Spacing.three,
-    marginBottom: Spacing.one,
-    textTransform: 'uppercase',
-    fontSize: 11,
-    fontWeight: '600',
-  },
-  questionPills: {
+  resultActions: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: Spacing.one,
-    marginBottom: Spacing.two,
-  },
-  pillPressable: {
-    borderRadius: Radius.full,
-  },
-  questionPill: {
-    minWidth: 34,
-    height: 34,
-    borderRadius: Radius.full,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: Spacing.one,
-  },
-  pillText: {
-    fontWeight: '600',
-  },
-  questionText: {
-    marginTop: Spacing.three,
-    fontSize: 16,
-    fontWeight: '500',
-    lineHeight: 24,
-  },
-  optionsList: {
-    marginTop: Spacing.three,
-    gap: Spacing.two,
-  },
-  optionPressable: {
-    borderRadius: Radius.md,
-  },
-  optionBox: {
-    borderRadius: Radius.md,
-    padding: Spacing.two,
-    flexDirection: 'row',
-    gap: Spacing.two,
-    alignItems: 'flex-start',
-  },
-  optionText: {
-    flex: 1,
-    lineHeight: 22,
-  },
-  feedbackBox: {
-    marginTop: Spacing.three,
-    marginBottom: Spacing.two,
-    paddingHorizontal: Spacing.two,
-    paddingVertical: Spacing.two,
-    gap: Spacing.one,
-    borderLeftWidth: 3,
-    borderLeftColor: 'transparent',
-  },
-  explanationText: {
-    lineHeight: 18,
-    marginTop: Spacing.one,
+    gap: Spacing.three,
+    width: '100%',
+    marginTop: Spacing.four,
   },
 });

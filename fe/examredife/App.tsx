@@ -176,7 +176,9 @@ const router = createBrowserRouter(
     <Route element={<RootLayout />} errorElement={<ErrorBoundary />}>
       {/* Main App Routes */}
       <Route element={<MainLayout />}>
-        <Route path="/" element={<Navigate to="/dashboard" replace />} />
+        <Route path="/" element={<Navigate to={`/dashboard${window.location.search}`} replace />} />
+        <Route path="/login" element={<Navigate to={`/dashboard${window.location.search}${window.location.search.includes('?') ? '&' : '?'}auth=login`} replace />} />
+        <Route path="/register" element={<Navigate to={`/dashboard${window.location.search}${window.location.search.includes('?') ? '&' : '?'}auth=register`} replace />} />
         <Route path="/dashboard" element={<Suspense fallback={<PageLoader />}><Dashboard /></Suspense>} />
         <Route path="/journey" element={<Suspense fallback={<PageLoader />}><Journey /></Suspense>} />
         <Route path="/flashcards" element={<Suspense fallback={<PageLoader />}><Flashcards /></Suspense>} />
@@ -253,7 +255,7 @@ const router = createBrowserRouter(
       />
 
       {/* Fallback */}
-      <Route path="*" element={<Navigate to="/dashboard" replace />} />
+      <Route path="*" element={<Navigate to={`/dashboard${window.location.search}`} replace />} />
     </Route>
   )
 );

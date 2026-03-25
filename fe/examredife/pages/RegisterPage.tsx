@@ -29,6 +29,12 @@ const RegisterPage: React.FC<RegisterPageProps> = ({ onRegister }) => {
     const [referralCode, setReferralCode] = useState('');
     const navigate = useNavigate();
 
+    React.useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        const ref = params.get('ref') || sessionStorage.getItem('examRediRef');
+        if (ref) setReferralCode(ref);
+    }, []);
+
     useSEO({
         title: 'Register',
         description: 'Create an ExamRedi account to start your journey to exam success.',

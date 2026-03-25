@@ -16,6 +16,7 @@ export interface AuthDetails {
 interface AuthModalProps {
     isOpen: boolean;
     onClose: () => void;
+    initialView?: 'login' | 'register' | 'forgot';
 }
 
 const Logo = () => (
@@ -30,15 +31,18 @@ const Logo = () => (
     </div>
 );
 
-const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
+const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialView = 'login' }) => {
     const { login, register } = useAuth();
-    const [view, setView] = useState<'login' | 'register' | 'forgot'>('login'); // Changed from isLoginView to view
+    const [view, setView] = useState<'login' | 'register' | 'forgot'>(initialView); // Use initialView
     const [error, setError] = useState<string | null>(null);
     const [infoMessage, setInfoMessage] = useState<string | null>(null); // Added infoMessage state
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
 
-    const { register: registerField, handleSubmit, formState: { errors }, reset, watch } = useForm<AuthDetails>();
+    const { register: registerField, handleSubmit, formState: { errors }, reset, watch, setValue } = useForm<AuthDetails>();
+    
+    // Check for stored referral code
+    const storedRef = sessionStorage.getItem('examRediRef');
 
     // Watch password for real-time validation
     const passwordValue = watch("password", "");
@@ -117,6 +121,18 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                             view === 'register' ? 'Join to start your journey to exam success!' :
                                 'Enter your email to receive a password reset link.'} {/* Updated text based on view */}
                     </p>
+
+                    {view === 'register' && storedRef && (
+                        <div className="mb-6 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3 flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                                <span className="flex h-2 w-2 rounded-full bg-blue-500 animate-pulse"></span>
+                                <p className="text-sm font-medium text-blue-700 dark:text-blue-300">Referral code applied: <span className="font-bold">{storedRef}</span></p>
+                            </div>
+                            <svg className="w-5 h-5 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                            </svg>
+                        </div>
+                    )}
 
                     <div className="space-y-4">
                         <button

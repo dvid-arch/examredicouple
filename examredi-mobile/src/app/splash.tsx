@@ -11,9 +11,11 @@ import { useRouter } from 'expo-router';
 
 import { useAuth } from '@/contexts/auth-context';
 
-const BRAND_PRIMARY = '#1A73E8';
-const BRAND_DARK = '#1355B5';
-const BRAND_DEEPER = '#0D3F8F';
+import { Colors } from '@/constants/theme';
+
+const BRAND_PRIMARY = Colors.light.primary;
+const BRAND_DARK = Colors.light.primaryDark;
+const BRAND_DEEPER = Colors.light.background; 
 
 const MIN_DISPLAY_MS = 1800;
 

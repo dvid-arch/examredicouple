@@ -41,6 +41,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const [user, setUser] = useState<UserProfile | null>(null);
     const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
     const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
+    const [initialAuthView, setInitialAuthView] = useState<'login' | 'register' | 'forgot'>('login');
     const [upgradeRequest, setUpgradeRequest] = useState<UpgradeRequest | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [justRegistered, setJustRegistered] = useState(false);
@@ -138,14 +139,23 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
         // 2. Auto-open Auth Modal
         const authAction = params.get('auth');
-        if (authAction === 'login' && !isAuthenticated && !isAuthModalOpen) {
-            console.log('Universal Auth Trigger: Opening login modal');
+        const shouldOpenLogin = authAction === 'login' && !isAuthenticated && !isAuthModalOpen;
+        const shouldOpenRegister = (authAction === 'register' || (refCode && !isAuthenticated)) && !isAuthenticated && !isAuthModalOpen;
+
+        if (shouldOpenLogin || shouldOpenRegister) {
+            console.log(`Universal Auth Trigger: Opening ${shouldOpenLogin ? 'login' : 'register'} modal`);
+            setInitialAuthView(shouldOpenLogin ? 'login' : 'register');
             window.history.pushState({ modal: 'auth' }, '');
             setIsAuthModalOpen(true);
         }
 
+        // 3. Show Referral Success Toast
+        if (refCode) {
+            success(`Referral code ${refCode} applied!`);
+        }
+
         // Clean up URL parameters if needed, but keep ref for now so user sees it in address bar if they just arrived
-        if (authAction === 'login') {
+        if (authAction === 'login' || authAction === 'register') {
             navigate(location.pathname, { replace: true });
         }
     }, [isLoading, isAuthenticated, isAuthModalOpen, location.search, location.hash, location.pathname, navigate]);
@@ -435,6 +445,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             {!isLoading && (
                 <AuthModal
                     isOpen={isAuthModalOpen}
+                    initialView={initialAuthView}
                     onClose={() => {
                         if (isAuthModalOpen) {
                             window.history.back();
