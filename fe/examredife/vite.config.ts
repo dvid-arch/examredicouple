@@ -13,11 +13,11 @@ export default defineConfig(({ mode }) => {
       middlewareMode: false,
       proxy: {
         '/api': {
-          target: 'http://localhost:5000',
+          target: 'http://localhost:5001',
           changeOrigin: true,
           rewrite: (path) => path,
-        }
-      }
+        },
+      },
     },
     build: {
       target: 'esnext',
@@ -31,9 +31,15 @@ export default defineConfig(({ mode }) => {
         output: {
           manualChunks: {
             vendor: ['react', 'react-dom', 'react-router-dom'],
-            markdown: ['react-markdown', 'remark-gfm', 'remark-math', 'rehype-katex', 'rehype-raw'],
-          }
-        }
+            markdown: [
+              'react-markdown',
+              'remark-gfm',
+              'remark-math',
+              'rehype-katex',
+              'rehype-raw',
+            ],
+          },
+        },
       },
       chunkSizeWarningLimit: 1000,
     },
@@ -60,7 +66,11 @@ export default defineConfig(({ mode }) => {
             },
           ],
         },
-        includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
+        includeAssets: [
+          'favicon.ico',
+          'apple-touch-icon.png',
+          'masked-icon.svg',
+        ],
         manifest: {
           name: 'ExamRedi AI Study Platform',
           short_name: 'ExamRedi',
@@ -72,26 +82,25 @@ export default defineConfig(({ mode }) => {
             {
               src: 'https://assets.website-files.com/62e8f5c9dbfdcc62e8d28712/62e8f5c9dbfdccb465d28747_ExamRedi-Logo-512.png',
               sizes: '192x192',
-              type: 'image/png'
+              type: 'image/png',
             },
             {
               src: 'https://assets.website-files.com/62e8f5c9dbfdcc62e8d28712/62e8f5c9dbfdccb465d28747_ExamRedi-Logo-512.png',
               sizes: '512x512',
-              type: 'image/png'
-            }
-          ]
-        }
-      })
+              type: 'image/png',
+            },
+          ],
+        },
+      }),
     ],
     define: {
       'process.env.API_KEY': JSON.stringify(env.GEMINI_API_KEY),
-      'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY)
+      'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY),
     },
     resolve: {
       alias: {
         '@': path.resolve(__dirname, '.'),
-      }
-    }
+      },
+    },
   };
 });
-
