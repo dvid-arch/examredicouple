@@ -159,6 +159,20 @@ const Profile: React.FC = () => {
         }
     };
 
+    const handleWithdraw = () => {
+        const balance = user.referralBalance || 0;
+        if (balance < 500) {
+            info("Minimum withdrawal amount is ₦500.");
+            return;
+        }
+
+        const phoneNumber = "2348123456789"; // Matching UpgradeModal.tsx
+        const message = `Hi ExamRedi, I would like to withdraw my referral balance of ₦${balance.toLocaleString()}. \n\nName: ${user.name}\nEmail: ${user.email}`;
+        const encodedMessage = encodeURIComponent(message);
+        window.open(`https://wa.me/${phoneNumber}?text=${encodedMessage}`, '_blank');
+        success("Withdrawal request sent via WhatsApp!");
+    };
+
     if (isLoading) {
         return <Card><p className="p-8">Loading profile...</p></Card>;
     }
@@ -254,7 +268,12 @@ const Profile: React.FC = () => {
                                 <div className="bg-green-50 dark:bg-green-500/10 p-4 rounded-xl border border-green-100 dark:border-green-500/20">
                                     <p className="text-[10px] uppercase font-bold text-green-600 dark:text-green-400 tracking-wider mb-1 text-center">Unlocked Balance</p>
                                     <p className="text-2xl font-black text-slate-800 dark:text-white text-center">₦{(user.referralBalance || 0).toLocaleString()}</p>
-                                    <button className="w-full mt-2 py-1 text-[10px] font-bold bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors uppercase">Withdraw</button>
+                                    <button 
+                                        onClick={handleWithdraw}
+                                        className="w-full mt-2 py-1 text-[10px] font-bold bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors uppercase"
+                                    >
+                                        Withdraw
+                                    </button>
                                 </div>
                                 <div className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl border border-slate-200 dark:border-slate-700 relative group">
                                     <div className="absolute top-2 right-2 cursor-help text-slate-400 hover:text-slate-600" title="This money is locked until your referred friends upgrade to Pro (₦2,500 Lifetime Access).">
