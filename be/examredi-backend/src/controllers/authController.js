@@ -106,9 +106,9 @@ export const registerUser = async (req, res) => {
                 name: user.name,
                 email: user.email,
                 status: 'pending',
-                reward: 500 // 500 NGN per referral
+                reward: 400 // 400 NGN per referral
             });
-            referrerDoc.referralPending += 500;
+            referrerDoc.referralPending += 400;
             await referrerDoc.save();
         }
 

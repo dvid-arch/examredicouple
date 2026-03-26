@@ -32,7 +32,7 @@ const UpgradeModal: React.FC<UpgradeModalProps> = ({ isOpen, onClose, request })
 
     const handleUpgrade = () => {
         const phoneNumber = "2348123456789"; // Replace with your actual WhatsApp number
-        const selectedPlanName = 'Lifetime Access (₦2,500)';
+        const selectedPlanName = 'Lifetime Access (₦2,000)';
         const message = `Hi ExamRedi, I would like to upgrade my account to the ${selectedPlanName}. My email is ${user?.email || 'not provided'}.`;
         const encodedMessage = encodeURIComponent(message);
         window.open(`https://wa.me/${phoneNumber}?text=${encodedMessage}`, '_blank');
@@ -89,7 +89,7 @@ const UpgradeModal: React.FC<UpgradeModalProps> = ({ isOpen, onClose, request })
                     {/* Price */}
                     <div className="text-center mb-6">
                         <div className="flex items-end justify-center gap-2">
-                            <span className="text-4xl font-extrabold text-white">₦2,500</span>
+                            <span className="text-4xl font-extrabold text-white">₦2,000</span>
                             <span className="text-slate-400 text-sm mb-1">/ one-time</span>
                         </div>
                         <p className="text-xs text-slate-500 mt-1">Instant Activation · Lifetime Access</p>

@@ -19,7 +19,7 @@ export const initializePayment = async (req, res) => {
         // Pricing logic
         let amount = 0;
         if (planType === 'day_pass') amount = 200 * 100; // ₦200 in kobo
-        else if (planType === 'monthly') amount = 2500 * 100; // ₦2500 in kobo
+        else if (planType === 'monthly') amount = 2000 * 100; // ₦2000 in kobo
         else if (planType === 'yearly') amount = 2000 * 12 * 100; // ₦20,000 (discounted) in kobo
         else return res.status(400).json({ message: 'Invalid plan type' });
 

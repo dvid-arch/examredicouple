@@ -79,9 +79,9 @@ const configurePassport = (passport) => {
                             name: user.name,
                             email: user.email,
                             status: 'pending',
-                            reward: 500
+                            reward: 400
                         });
-                        referrerDoc.referralPending += 500;
+                        referrerDoc.referralPending += 400;
                         await referrerDoc.save();
                     }
 
