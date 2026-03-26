@@ -116,9 +116,9 @@ const WelcomeBanner = () => {
                             {/* Estimated Score Ring */}
                             <div className="flex-1 sm:flex-none flex items-center gap-2 sm:gap-3 bg-white/10 backdrop-blur-sm px-3 sm:px-4 py-2 rounded-xl border border-white/20">
                                 <div className="relative w-8 h-8 sm:w-10 sm:h-10">
-                                    <svg className="w-full h-full transform -rotate-90">
-                                        <circle cx="20" cy="20" r="16" stroke="currentColor" strokeWidth="3" fill="transparent" className="text-blue-900/30" />
-                                        <circle cx="20" cy="20" r="16" stroke="currentColor" strokeWidth="3" fill="transparent" className="text-white" strokeDasharray="100" strokeDashoffset={strokeDashoffset} style={{ transition: 'stroke-dashoffset 1s ease-in-out' }} />
+                                    <svg viewBox="0 0 40 40" className="w-full h-full transform -rotate-90">
+                                        <circle cx="20" cy="20" r="16" stroke="currentColor" strokeWidth="4" fill="transparent" className="text-blue-900/30" />
+                                        <circle cx="20" cy="20" r="16" stroke="currentColor" strokeWidth="4" fill="transparent" className="text-white" strokeDasharray="101" strokeDashoffset={strokeDashoffset} style={{ transition: 'stroke-dashoffset 1s ease-in-out' }} />
                                     </svg>
                                 </div>
                                 <div>
