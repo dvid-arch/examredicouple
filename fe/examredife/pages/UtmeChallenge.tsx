@@ -73,6 +73,14 @@ const UtmeChallenge: React.FC = () => {
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
     const [timeLeft, setTimeLeft] = useState(CHALLENGE_DURATION_MINUTES * 60);
     const [scoreSaved, setScoreSaved] = useState(false);
+    const [showRules, setShowRules] = useState(() => {
+        return localStorage.getItem('hideUtmeChallengeRules') !== 'true';
+    });
+
+    const handleDismissRules = () => {
+        localStorage.setItem('hideUtmeChallengeRules', 'true');
+        setShowRules(false);
+    };
 
     const sessionId = useMemo(() => {
         // Since challenge is always a fresh start from lobby, we can use a timestamp
@@ -378,14 +386,62 @@ const UtmeChallenge: React.FC = () => {
 
     const renderLobby = () => (
         <div className="space-y-6">
-            <Card className="text-center">
-                <TrophyIcon />
-                <h1 className="text-4xl font-bold text-slate-800 mt-4">UTME Challenge</h1>
-                <p className="text-slate-600 mt-2">Test your knowledge against the clock in a simulated exam environment.</p>
-                <button onClick={handleStartSelection} className="mt-6 w-full md:w-1/2 bg-primary text-white font-bold py-3 px-6 rounded-lg hover:bg-green-700 transition">
-                    Start New Challenge
-                </button>
+            <Card className="text-center relative overflow-hidden">
+                <div className="absolute top-0 right-0 p-4">
+                    <TrophyIcon />
+                </div>
+                <div className="relative z-10 py-4">
+                    <h1 className="text-4xl font-bold text-slate-800">UTME Challenge</h1>
+                    <p className="text-slate-600 mt-2 max-w-lg mx-auto">Test your knowledge against the clock in a simulated exam environment and win your spot among the best.</p>
+                    <button onClick={handleStartSelection} className="mt-8 w-full md:w-1/2 bg-primary text-white font-bold py-4 px-8 rounded-xl hover:bg-green-700 transition-all shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-[0.98]">
+                        Start New Challenge
+                    </button>
+                </div>
             </Card>
+
+            {showRules && (
+                <div className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white rounded-2xl p-6 shadow-xl relative animate-fade-in border border-blue-400/30">
+                    <button 
+                        onClick={handleDismissRules}
+                        className="absolute top-4 right-4 text-white/70 hover:text-white transition-colors p-1"
+                        aria-label="Dismiss rules"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                    <div className="flex items-start gap-4">
+                        <div className="bg-white/20 p-3 rounded-full flex-shrink-0">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-yellow-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7" />
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 className="text-xl font-bold mb-3 flex items-center gap-2">
+                                🏆 Win Amazing Prizes!
+                                <span className="bg-yellow-400 text-yellow-900 text-[10px] px-2 py-0.5 rounded-full font-black uppercase tracking-wider">Top 3 Only</span>
+                            </h3>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
+                                <div className="space-y-2">
+                                    <p className="font-bold text-blue-100 uppercase tracking-widest text-[10px]">How Ranking Works</p>
+                                    <ul className="space-y-1.5 list-disc list-inside text-blue-50 opacity-90">
+                                        <li>Currently ranked by your <strong>Estimated Score</strong> (Challenge performance + Study activity).</li>
+                                        <li>Final winners are determined by <strong>Actual UTME Results</strong> after verification.</li>
+                                    </ul>
+                                </div>
+                                <div className="space-y-2">
+                                    <p className="font-bold text-blue-100 uppercase tracking-widest text-[10px]">Winning Criteria</p>
+                                    <ul className="space-y-1.5 list-disc list-inside text-blue-50 opacity-90">
+                                        <li>Must maintain a high consistency in practice.</li>
+                                        <li>Top 3 highest verified scores on the national leaderboard win.</li>
+                                        <li>Verified results must match your ExamRedi profile performance.</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
             <Card>
                 <div className="flex justify-between items-center mb-4">
                     <h2 className="text-2xl font-bold text-slate-800">Top Scores</h2>

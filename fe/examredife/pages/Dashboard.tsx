@@ -34,7 +34,7 @@ const tiles = [
     { title: 'Performance Analysis', description: 'Track your scores and identify weak spots.', colorClass: 'bg-orange-500', path: '/performance', icon: <PerformanceIcon /> },
     { title: 'Educational Games', description: 'Learn while having fun with interactive games.', colorClass: 'bg-yellow-500', path: '/games', icon: <GamesIcon /> },
     { title: 'UTME Literature Books', description: 'Review key themes from official books.', colorClass: 'bg-purple-500', path: '/literature', icon: <BookIcon /> },
-    { title: 'UTME Challenge', description: 'Compete on the leaderboard in real-time.', colorClass: 'bg-red-500', path: '/challenge', icon: <ChallengeIcon /> },
+    { title: 'UTME Challenge', description: 'Compete for prizes on the national leaderboard.', colorClass: 'bg-red-500', path: '/challenge', icon: <ChallengeIcon /> },
     { title: 'Career & Institutions', description: 'Explore university and course information.', colorClass: 'bg-indigo-500', path: '/career-institutions', icon: <CareerIcon /> },
     { title: 'Dictionary', description: 'Look up words and definitions instantly.', colorClass: 'bg-teal-500', path: '/dictionary', icon: <DictionaryIcon /> },
     { title: 'Refer a Friend', description: 'Invite others and help them succeed.', colorClass: 'bg-indigo-600', path: '/profile#referral', icon: <InviteIcon /> },
