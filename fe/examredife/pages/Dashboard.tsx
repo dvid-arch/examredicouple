@@ -11,6 +11,7 @@ import { DashboardSkeleton } from '../components/Skeletons.tsx';
 import { usePastQuestions } from '../contexts/PastQuestionsContext.tsx';
 import { StudyGuide } from '../types.ts';
 import OnboardingSubjectModal from '../components/OnboardingSubjectModal.tsx';
+import { useReturningUser } from '../hooks/useReturningUser.ts';
 
 // FIX: Changed icon components to accept props to allow className to be passed via React.cloneElement.
 const PracticeIcon = (props: React.ComponentProps<"svg">) => <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" {...props}><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>;
@@ -69,6 +70,7 @@ const DashboardTile: React.FC<{ title: string; description: string; colorClass: 
 
 const WelcomeBanner = () => {
     const { isAuthenticated, user } = useAuth();
+    const isReturning = useReturningUser();
     const { streak, estimatedScore } = useUserProgress();
 
     // Calculate percentage for progress circle (400 is max score)
@@ -84,12 +86,18 @@ const WelcomeBanner = () => {
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 sm:gap-6">
                     <div className="min-w-0">
                         <h1 className="text-2xl sm:text-3xl font-bold mb-2 tracking-tight truncate sm:whitespace-normal">
-                            {isAuthenticated && user ? `Hello, ${user.name} 👋` : "Welcome to ExamRedi!"}
+                            {isAuthenticated && user
+                                ? `Hello, ${user.name} 👋`
+                                : isReturning
+                                    ? "Welcome Back to ExamRedi!"
+                                    : "Start Your Success Journey!"}
                         </h1>
                         <p className="text-blue-50 text-base sm:text-lg max-w-xl font-medium leading-relaxed line-clamp-2 sm:line-clamp-none">
                             {isAuthenticated
                                 ? "Your AI study assistant is ready. What would you like to learn today?"
-                                : "The smartest way to prepare for your exams. Join thousands of students acing their tests."
+                                : isReturning
+                                    ? "The smartest way to prepare for your exams. Continue where you left off."
+                                    : "The smartest way to prepare for your exams. Join thousands of students acing their tests."
                             }
                         </p>
                     </div>

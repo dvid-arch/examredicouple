@@ -5,6 +5,7 @@ import { NavItemType } from '../types.ts';
 import { useAuth } from '../contexts/AuthContext.tsx';
 import { usePwaInstall } from '../contexts/PwaContext.tsx';
 import UserAvatar from './UserAvatar.tsx';
+import { useReturningUser } from '../hooks/useReturningUser.ts';
 
 interface SidebarProps {
     isOpen: boolean;
@@ -56,6 +57,7 @@ const NavItem: React.FC<{ item: NavItemType; onClick?: () => void }> = ({ item, 
 
 const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, onNavigate }) => {
     const { isAuthenticated, user, logout, requestLogin, requestUpgrade, isLoading } = useAuth();
+    const isReturning = useReturningUser();
     const { canInstall, triggerInstallPrompt } = usePwaInstall();
 
     const handleUpgradeClick = () => {
@@ -138,8 +140,11 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, onNavigate }) => {
                             )}
                         </>
                     ) : (
-                        <button onClick={requestLogin} className="w-full bg-primary text-white font-bold py-3 px-4 rounded-lg hover:bg-accent transition-colors">
-                            Login / Sign Up
+                        <button 
+                            onClick={requestLogin} 
+                            className="w-full bg-primary text-white font-bold py-3 px-4 rounded-lg hover:bg-accent transition-colors"
+                        >
+                            {isReturning ? 'Login / Sign Up' : 'Join ExamRedi'}
                         </button>
                     )}
                 </div>

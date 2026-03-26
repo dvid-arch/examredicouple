@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { usePwaInstall } from '../contexts/PwaContext.tsx';
 import { useAuth } from '../contexts/AuthContext.tsx';
+import { useReturningUser } from '../hooks/useReturningUser.ts';
 
 const Logo = () => (
     <div className="flex items-center space-x-2">
@@ -17,21 +18,7 @@ const Logo = () => (
 );
 
 /** Detect if this visitor has logged in before by checking for a stored refresh token */
-const useReturningUser = () => {
-    const [isReturning, setIsReturning] = useState(false);
-    useEffect(() => {
-        try {
-            const hasToken = !!localStorage.getItem('refreshToken');
-            const hasVisited = !!localStorage.getItem('examredi_visited');
-            setIsReturning(hasToken || hasVisited);
-            // Mark as visited for future loads
-            if (!hasVisited) localStorage.setItem('examredi_visited', '1');
-        } catch {
-            // localStorage may be blocked in private/incognito — treat as new
-        }
-    }, []);
-    return isReturning;
-};
+// --- Constants & Types ---
 
 const LandingHeader: React.FC = () => {
     const { canInstall, showInstallBanner } = usePwaInstall();

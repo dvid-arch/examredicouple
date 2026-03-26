@@ -10,6 +10,7 @@ import { usePwaInstall } from '../contexts/PwaContext.tsx';
 import ThemeToggle from './ThemeToggle.tsx';
 import OfflineIndicator from './OfflineIndicator.tsx';
 import UserAvatar from './UserAvatar.tsx';
+import { useReturningUser } from '../hooks/useReturningUser.ts';
 
 const Logo = () => (
     <div className="flex items-center px-1 select-none">
@@ -38,6 +39,7 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
     const navigate = useNavigate();
     const [searchQuery, setSearchQuery] = useState('');
     const { isAuthenticated, user, requestLogin, requestUpgrade, isLoading, logout } = useAuth();
+    const isReturning = useReturningUser();
     const { canInstall, showInstallBanner } = usePwaInstall();
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
@@ -212,8 +214,11 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
                                 </div>
                             </>
                         ) : (
-                            <button onClick={requestLogin} className="bg-primary text-white font-bold py-2 px-5 rounded-lg hover:bg-accent transition-colors text-sm">
-                                Login
+                            <button 
+                                onClick={requestLogin} 
+                                className="bg-primary text-white font-bold py-2 px-5 rounded-lg hover:bg-accent transition-colors text-sm"
+                            >
+                                {isReturning ? 'Login' : 'Sign Up'}
                             </button>
                         )}
                     </div>
