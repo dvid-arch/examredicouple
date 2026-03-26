@@ -239,10 +239,10 @@ const QuestionSearch: React.FC = () => {
 
             {/* Main Content Area */}
             <div className="flex-1 min-w-0 space-y-6">
-                <Card className="p-4 lg:p-6 bg-gradient-to-br from-white to-slate-50 dark:from-slate-900 dark:to-slate-800 border-none shadow-sm">
-                    <div className="flex flex-col md:flex-row md:items-center gap-4">
+                <Card className="p-3.5 sm:p-6 bg-gradient-to-br from-white to-slate-50 dark:from-slate-900 dark:to-slate-800 border-none shadow-sm">
+                    <div className="flex flex-col md:flex-row md:items-center gap-3 sm:gap-4">
                         <div className="flex-1 relative">
-                            <span className="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
+                            <span className="absolute inset-y-0 left-0 flex items-center pl-3.5 sm:pl-4 pointer-events-none">
                                 <SearchIcon />
                             </span>
                             <form onSubmit={(e) => { e.preventDefault(); performSearch(query); }}>
@@ -250,14 +250,14 @@ const QuestionSearch: React.FC = () => {
                                     type="text"
                                     value={query}
                                     onChange={(e) => setQuery(e.target.value)}
-                                    placeholder="Search by keyword (e.g., Photosynthesis, Newton...)"
-                                    className="w-full bg-slate-100 dark:bg-slate-700/50 border-none rounded-2xl pl-12 pr-4 py-4 focus:ring-2 focus:ring-primary shadow-inner text-slate-800 dark:text-white"
+                                    placeholder="Search keywords..."
+                                    className="w-full bg-slate-100 dark:bg-slate-700/50 border-none rounded-xl sm:rounded-2xl pl-10 sm:pl-12 pr-4 py-3 sm:py-4 focus:ring-2 focus:ring-primary shadow-inner text-sm sm:text-base text-slate-800 dark:text-white"
                                 />
                             </form>
                         </div>
                         <button
                             onClick={() => setIsFilterSidebarOpen(true)}
-                            className="lg:hidden flex items-center justify-center gap-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl px-6 py-4 font-bold text-slate-700 dark:text-white"
+                            className="lg:hidden flex items-center justify-center gap-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl sm:rounded-2xl px-4 py-3 sm:py-4 font-bold text-sm sm:text-base text-slate-700 dark:text-white"
                         >
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
@@ -285,7 +285,7 @@ const QuestionSearch: React.FC = () => {
                 <div className="space-y-6">
                     <div className="flex items-center justify-between px-2">
                         <div className="flex flex-col">
-                            <h2 className="text-xl font-bold text-slate-800 dark:text-white">
+                            <h2 className="text-lg sm:text-xl font-bold text-slate-800 dark:text-white leading-tight">
                                 {resultsView === 'questions' ? `Search Results (${totalResultsCount})` : `Library (${filteredPapers.length} Papers)`}
                             </h2>
                             {!isAdmin && user?.subscription !== 'pro' && (
@@ -321,15 +321,15 @@ const QuestionSearch: React.FC = () => {
                                 <Card key={paper.id} className={`p-0 overflow-hidden border-slate-100 dark:border-slate-800 hover:shadow-lg transition-all group ${expandedPaperId === paper.id ? 'md:col-span-2' : ''}`}>
                                     <button
                                         onClick={() => setExpandedPaperId(expandedPaperId === paper.id ? null : paper.id)}
-                                        className="w-full text-left p-5 flex items-center justify-between"
+                                        className="w-full text-left p-4 sm:p-5 flex items-center justify-between"
                                     >
-                                        <div className="flex items-center gap-4">
-                                            <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary font-bold text-lg group-hover:scale-110 transition-transform">
+                                        <div className="flex items-center gap-3 sm:gap-4">
+                                            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-primary/10 flex items-center justify-center text-primary font-bold text-base sm:text-lg group-hover:scale-110 transition-transform">
                                                 {paper.subject.charAt(0)}
                                             </div>
                                             <div>
-                                                <h3 className="font-bold text-slate-800 dark:text-white text-lg">{paper.subject}</h3>
-                                                <p className="text-sm text-slate-500">{paper.exam} • {paper.year}</p>
+                                                <h3 className="font-bold text-slate-800 dark:text-white text-base sm:text-lg leading-tight">{paper.subject}</h3>
+                                                <p className="text-[10px] sm:text-sm text-slate-500 font-medium uppercase tracking-wider mt-0.5">{paper.exam} • {paper.year}</p>
                                             </div>
                                         </div>
                                         <span className={`transform transition-transform ${expandedPaperId === paper.id ? 'rotate-180 text-primary' : 'text-slate-300'}`}>

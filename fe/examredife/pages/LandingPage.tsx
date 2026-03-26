@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { usePwaInstall } from '../contexts/PwaContext.tsx';
+import { useAuth } from '../contexts/AuthContext.tsx';
 
 const Logo = () => (
     <div className="flex items-center space-x-2">
@@ -34,6 +35,7 @@ const useReturningUser = () => {
 
 const LandingHeader: React.FC = () => {
     const { canInstall, showInstallBanner } = usePwaInstall();
+    const { isAuthenticated } = useAuth();
     const isReturning = useReturningUser();
 
     return (
@@ -44,30 +46,37 @@ const LandingHeader: React.FC = () => {
                     {canInstall && (
                         <button
                             onClick={showInstallBanner}
-                            className="font-semibold text-primary hover:underline"
+                            className="font-semibold text-primary hover:underline text-sm sm:text-base hidden sm:block"
                         >
                             Install App
                         </button>
                     )}
-                    {isReturning ? (
+                    {isAuthenticated ? (
+                        <Link
+                            to="/dashboard"
+                            className="bg-primary text-white font-bold py-2 px-4 sm:px-6 rounded-lg hover:bg-accent transition-all text-sm shadow-md"
+                        >
+                            Dashboard
+                        </Link>
+                    ) : isReturning ? (
                         <>
                             <Link
                                 to="/register"
-                                className="text-sm text-slate-500 hover:text-slate-700 transition-colors"
+                                className="text-xs sm:text-sm text-slate-500 hover:text-slate-700 transition-colors hidden xs:block"
                             >
-                                New here?
+                                New?
                             </Link>
                             <Link
                                 to="/login"
-                                className="bg-primary text-white font-bold py-2 px-5 rounded-lg hover:bg-accent transition-colors flex items-center gap-1.5"
+                                className="bg-primary text-white font-bold py-2 px-4 sm:px-6 rounded-lg hover:bg-accent transition-colors flex items-center gap-1.5 text-xs sm:text-base shadow-md"
                             >
-                                <span>👋</span> Welcome Back
+                                <span>👋</span> Back
                             </Link>
                         </>
                     ) : (
                         <>
-                            <Link to="/login" className="font-semibold text-primary hover:underline">Login</Link>
-                            <Link to="/register" className="bg-primary text-white font-bold py-2 px-5 rounded-lg hover:bg-accent transition-colors">Get Started</Link>
+                            <Link to="/login" className="font-semibold text-primary hover:underline text-sm sm:text-base">Login</Link>
+                            <Link to="/register" className="bg-primary text-white font-bold py-2 px-4 sm:px-6 rounded-lg hover:bg-accent transition-colors text-sm sm:text-base shadow-md">Join</Link>
                         </>
                     )}
                 </div>
@@ -88,27 +97,32 @@ const FeatureCard: React.FC<{ title: string; description: string; icon: React.Re
 
 const LandingPage: React.FC = () => {
     const isReturning = useReturningUser();
+    const { isAuthenticated } = useAuth();
 
     return (
         <div className="bg-slate-50 min-h-screen">
             <LandingHeader />
             <main>
                 {/* Hero Section */}
-                <section className="py-20 md:py-32 text-center bg-white">
+                <section className="py-12 md:py-32 text-center bg-white">
                     <div className="container mx-auto px-4">
-                        <h1 className="text-4xl md:text-6xl font-extrabold text-slate-900 leading-tight">
+                        <h1 className="text-3xl sm:text-4xl md:text-6xl font-extrabold text-slate-900 leading-tight">
                             Ace Your Exams with <span className="text-primary">AI-Powered</span> Study Tools
                         </h1>
-                        <p className="mt-6 text-lg md:text-xl text-slate-600 max-w-3xl mx-auto">
+                        <p className="mt-4 sm:mt-6 text-base sm:text-lg md:text-xl text-slate-600 max-w-3xl mx-auto">
                             ExamRedi provides everything you need to succeed. From interactive practice sessions and AI tutors to dynamic study guides and educational games.
                         </p>
-                        <div className="mt-10">
-                            {isReturning ? (
-                                <Link to="/login" className="bg-primary text-white font-black py-4 px-10 rounded-2xl text-lg hover:bg-accent transition-all hover:scale-105 inline-block shadow-xl shadow-primary/20">
+                        <div className="mt-8 sm:mt-10">
+                            {isAuthenticated ? (
+                                <Link to="/dashboard" className="bg-primary text-white font-black py-3.5 px-8 sm:py-4 sm:px-10 rounded-2xl text-base sm:text-lg hover:bg-accent transition-all hover:scale-105 inline-block shadow-xl shadow-primary/20">
+                                    Go to My Dashboard
+                                </Link>
+                            ) : isReturning ? (
+                                <Link to="/login" className="bg-primary text-white font-black py-3.5 px-8 sm:py-4 sm:px-10 rounded-2xl text-base sm:text-lg hover:bg-accent transition-all hover:scale-105 inline-block shadow-xl shadow-primary/20">
                                     Continue My Progress
                                 </Link>
                             ) : (
-                                <Link to="/register" className="bg-primary text-white font-bold py-4 px-10 rounded-lg text-lg hover:bg-accent transition-transform hover:scale-105 inline-block">
+                                <Link to="/register" className="bg-primary text-white font-bold py-3.5 px-8 sm:py-4 sm:px-10 rounded-lg text-base sm:text-lg hover:bg-accent transition-transform hover:scale-105 inline-block">
                                     Start Studying for Free
                                 </Link>
                             )}
@@ -195,36 +209,40 @@ const LandingPage: React.FC = () => {
                 {/* Pro Benefits Section */}
                 <section className="py-20 bg-white">
                     <div className="container mx-auto px-4 max-w-4xl">
-                        <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-[3rem] p-8 md:p-16 text-center text-white relative overflow-hidden shadow-2xl">
+                        <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-[2rem] sm:rounded-[3rem] p-6 sm:p-12 md:p-16 text-center text-white relative overflow-hidden shadow-2xl">
                             <div className="absolute top-0 right-0 w-64 h-64 bg-primary/20 rounded-full blur-3xl -mt-32 -mr-32"></div>
-                            <h2 className="text-3xl md:text-5xl font-black mb-8 relative z-10 tracking-tight">Level Up with <span className="text-primary">ExamRedi Pro</span></h2>
-                            <p className="text-slate-300 text-lg mb-10 relative z-10">Unlock the full power of AI-powered learning and leave nothing to chance.</p>
+                            <h2 className="text-2xl sm:text-3xl md:text-5xl font-black mb-6 sm:mb-8 relative z-10 tracking-tight">Level Up with <span className="text-primary">ExamRedi Pro</span></h2>
+                            <p className="text-slate-300 text-base sm:text-lg mb-8 sm:mb-10 relative z-10">Unlock the full power of AI-powered learning and leave nothing to chance.</p>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-left mb-12 relative z-10">
-                                <div className="flex items-center gap-3">
-                                    <svg className="h-6 w-6 text-green-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
-                                    <span className="font-semibold">Unlimited AI Tutor Messages</span>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 text-left mb-10 sm:mb-12 relative z-10">
+                                <div className="flex items-center gap-2 sm:gap-3">
+                                    <svg className="h-5 w-5 sm:h-6 sm:w-6 text-green-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
+                                    <span className="font-semibold text-sm sm:text-base">Unlimited AI Tutor Messages</span>
                                 </div>
-                                <div className="flex items-center gap-3">
-                                    <svg className="h-6 w-6 text-green-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
-                                    <span className="font-semibold">Full Past Question Access (1978-2025)</span>
+                                <div className="flex items-center gap-2 sm:gap-3">
+                                    <svg className="h-5 w-5 sm:h-6 sm:w-6 text-green-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
+                                    <span className="font-semibold text-sm sm:text-base">Full Past Question Access (2000-2025)</span>
                                 </div>
-                                <div className="flex items-center gap-3">
-                                    <svg className="h-6 w-6 text-green-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
-                                    <span className="font-semibold">Generate Unlimited Study Guides</span>
+                                <div className="flex items-center gap-2 sm:gap-3">
+                                    <svg className="h-5 w-5 sm:h-6 sm:w-6 text-green-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
+                                    <span className="font-semibold text-sm sm:text-base">Generate Unlimited Study Guides</span>
                                 </div>
-                                <div className="flex items-center gap-3">
-                                    <svg className="h-6 w-6 text-green-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
-                                    <span className="font-semibold">Global Leaderboard Access</span>
+                                <div className="flex items-center gap-2 sm:gap-3">
+                                    <svg className="h-5 w-5 sm:h-6 sm:w-6 text-green-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
+                                    <span className="font-semibold text-sm sm:text-base">Global Leaderboard Access</span>
                                 </div>
                             </div>
 
-                            {isReturning ? (
-                                <Link to="/login" className="bg-primary text-white font-black py-4 px-12 rounded-2xl text-xl hover:bg-accent transition-all hover:scale-105 inline-block shadow-xl shadow-primary/20 relative z-10">
+                            {isAuthenticated ? (
+                                <Link to="/dashboard" className="bg-primary text-white font-black py-3.5 px-10 sm:py-4 sm:px-12 rounded-2xl text-base sm:text-xl hover:bg-accent transition-all hover:scale-105 inline-block shadow-xl shadow-primary/20 relative z-10">
+                                    Go to Dashboard
+                                </Link>
+                            ) : isReturning ? (
+                                <Link to="/login" className="bg-primary text-white font-black py-3.5 px-10 sm:py-4 sm:px-12 rounded-2xl text-base sm:text-xl hover:bg-accent transition-all hover:scale-105 inline-block shadow-xl shadow-primary/20 relative z-10">
                                     Resume Pro Learning
                                 </Link>
                             ) : (
-                                <Link to="/register" className="bg-primary text-white font-black py-4 px-12 rounded-2xl text-xl hover:bg-accent transition-all hover:scale-105 inline-block shadow-xl shadow-primary/20 relative z-10">
+                                <Link to="/register" className="bg-primary text-white font-black py-3.5 px-10 sm:py-4 sm:px-12 rounded-2xl text-base sm:text-xl hover:bg-accent transition-all hover:scale-105 inline-block shadow-xl shadow-primary/20 relative z-10">
                                     Upgrade My Learning
                                 </Link>
                             )}

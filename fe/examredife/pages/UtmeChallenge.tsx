@@ -441,10 +441,29 @@ const UtmeChallenge: React.FC = () => {
 
         return (
             <div className="flex flex-col h-full max-h-[calc(100vh-120px)]">
-                <div className="bg-white p-3 border-b shadow-sm rounded-t-lg flex justify-between items-center">
-                    <h2 className="font-bold text-lg text-primary">UTME Challenge</h2>
-                    <div className="flex items-center bg-red-100 text-red-600 font-bold px-3 py-1 rounded-full"><ClockIcon /> {formatTime(timeLeft)}</div>
+            <header className="bg-white text-gray-800 px-3 py-2 sm:px-6 sm:py-4 flex justify-between items-center shadow-sm flex-shrink-0 z-20 h-14 sm:h-20">
+                <div className="flex items-center gap-2 sm:gap-3">
+                    <div className="w-7 h-7 sm:w-10 sm:h-10 rounded-full bg-orange-100 flex items-center justify-center text-orange-600 font-bold text-[10px] sm:text-base">
+                        U
+                    </div>
+                    <div>
+                        <div className="font-bold text-xs sm:text-lg leading-tight truncate">UTME Challenge</div>
+                        <div className="text-[9px] sm:text-xs text-gray-500 font-medium uppercase tracking-wider hidden sm:block">Exam Simulation</div>
+                    </div>
                 </div>
+
+                <div className="bg-orange-50 text-orange-700 font-bold text-xs sm:text-xl font-mono tracking-widest px-2 py-1 sm:px-6 sm:py-2 rounded-full border border-orange-100 shadow-sm">
+                    {formatTime(timeLeft)}
+                </div>
+
+                <button
+                    onClick={() => { if (window.confirm('Submit challenge?')) handleSubmit(); }}
+                    className="bg-orange-500 hover:bg-orange-600 text-white font-bold py-1.5 px-3 sm:py-2.5 sm:px-6 rounded-full transition-all shadow-md shadow-orange-200 text-[10px] sm:text-base shrink-0"
+                >
+                    <span className="sm:inline hidden">Submit Challenge</span>
+                    <span className="sm:hidden inline">Submit</span>
+                </button>
+            </header>
 
                 <div className="flex-1 bg-gray-50 p-4 overflow-y-auto">
                     <p className="font-semibold text-slate-700 mb-2">Question {currentQuestionIndex + 1}/{TOTAL_QUESTIONS} <span className="text-sm text-slate-500">({currentQuestion.subject})</span></p>
@@ -474,11 +493,11 @@ const UtmeChallenge: React.FC = () => {
                     </div>
                 </div>
 
-                <div className="bg-white p-4 border-t shadow-inner rounded-b-lg">
-                    <div className="flex justify-between items-center">
-                        <button onClick={() => setCurrentQuestionIndex(p => Math.max(0, p - 1))} disabled={currentQuestionIndex === 0} className="font-semibold py-2 px-6 rounded-lg bg-gray-200 hover:bg-gray-300 disabled:opacity-50">Previous</button>
-                        <button onClick={handleSubmit} className="bg-primary text-white font-bold py-2 px-8 rounded-lg hover:bg-green-700">Submit</button>
-                        <button onClick={() => setCurrentQuestionIndex(p => Math.min(questions.length - 1, p + 1))} disabled={currentQuestionIndex === questions.length - 1} className="font-semibold py-2 px-8 rounded-lg bg-gray-200 hover:bg-gray-300 disabled:opacity-50">Next</button>
+                <div className="bg-white p-3 sm:p-4 border-t shadow-inner rounded-b-lg">
+                    <div className="flex justify-between items-center gap-2">
+                        <button onClick={() => setCurrentQuestionIndex(p => Math.max(0, p - 1))} disabled={currentQuestionIndex === 0} className="font-semibold py-2 px-4 sm:px-6 rounded-lg bg-gray-200 hover:bg-gray-300 disabled:opacity-50 text-xs sm:text-base">Previous</button>
+                        <button onClick={handleSubmit} className="bg-primary text-white font-bold py-2 px-6 sm:px-8 rounded-lg hover:bg-green-700 text-xs sm:text-base">Submit</button>
+                        <button onClick={() => setCurrentQuestionIndex(p => Math.min(questions.length - 1, p + 1))} disabled={currentQuestionIndex === questions.length - 1} className="font-semibold py-2 px-4 sm:px-8 rounded-lg bg-gray-200 hover:bg-gray-300 disabled:opacity-50 text-xs sm:text-base">Next</button>
                     </div>
                 </div>
             </div>

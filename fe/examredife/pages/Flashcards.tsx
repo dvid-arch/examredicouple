@@ -141,7 +141,7 @@ const StudySession: React.FC<StudySessionProps> = ({ deck, onFinish }) => {
         return (
             <Card className="flex flex-col items-center justify-center text-center p-6">
                 <CompletionIcon />
-                <h2 className="text-3xl font-bold text-slate-800 dark:text-slate-50 mt-4">Session Complete!</h2>
+                <h2 className="text-2xl md:text-3xl font-bold text-slate-800 dark:text-slate-50 mt-4">Session Complete!</h2>
                 <p className="text-slate-600 dark:text-slate-300 mt-2">Great job! Here's your summary:</p>
                 <div className="flex gap-8 my-6 text-lg">
                     <div>
@@ -188,14 +188,14 @@ const StudySession: React.FC<StudySessionProps> = ({ deck, onFinish }) => {
             <div className="max-w-3xl mx-auto relative group">
                 <div
                     onClick={handleFlip}
-                    className={`w-full aspect-video rounded-2xl p-4 flex items-center justify-center text-center shadow-lg transition-transform duration-500 cursor-pointer select-none ${isFlipped ? 'bg-primary-light dark:bg-primary/20 [transform:rotateY(180deg)]' : 'bg-white dark:bg-slate-700 [transform:rotateY(0deg)]'}`}
+                    className={`w-full min-h-[280px] md:aspect-video rounded-2xl p-6 flex items-center justify-center text-center shadow-lg transition-transform duration-500 cursor-pointer select-none ${isFlipped ? 'bg-primary-light dark:bg-primary/20 [transform:rotateY(180deg)]' : 'bg-white dark:bg-slate-700 [transform:rotateY(0deg)]'}`}
                     style={{ transformStyle: 'preserve-3d' }}
                 >
                     <div className={`transition-opacity duration-300 ${isFlipped ? 'opacity-0' : 'opacity-100'}`} style={{ backfaceVisibility: 'hidden', transform: 'rotateY(0deg)' }}>
-                        <p className="text-2xl md:text-3xl font-bold text-slate-800 dark:text-slate-50">{currentCard.front}</p>
+                        <p className="text-xl md:text-3xl font-bold text-slate-800 dark:text-slate-50 leading-tight px-2">{currentCard.front}</p>
                     </div>
-                    <div className={`absolute top-0 left-0 w-full h-full p-4 flex items-center justify-center opacity-0 transition-opacity duration-300 ${isFlipped ? 'opacity-100' : 'opacity-0'}`} style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}>
-                        <p className="text-xl md:text-2xl text-slate-700 dark:text-slate-200">{currentCard.back}</p>
+                    <div className={`absolute top-0 left-0 w-full h-full p-6 flex items-center justify-center opacity-0 transition-opacity duration-300 ${isFlipped ? 'opacity-100' : 'opacity-0'}`} style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}>
+                        <p className="text-lg md:text-2xl text-slate-700 dark:text-slate-200 leading-relaxed px-2">{currentCard.back}</p>
                     </div>
                 </div>
 
@@ -214,17 +214,17 @@ const StudySession: React.FC<StudySessionProps> = ({ deck, onFinish }) => {
             <div className="flex items-center justify-center gap-4 pt-4">
                 {isFlipped ? (
                     <>
-                        <button onClick={() => handleNextCard(false)} className="flex-1 flex items-center justify-center gap-2 bg-yellow-100 dark:bg-yellow-500/20 text-yellow-800 dark:text-yellow-300 font-bold py-4 rounded-lg hover:bg-yellow-200 dark:hover:bg-yellow-500/30 transition-colors duration-200">
+                        <button onClick={() => handleNextCard(false)} className="flex-1 flex items-center justify-center gap-2 bg-yellow-100 dark:bg-yellow-500/20 text-yellow-800 dark:text-yellow-300 font-bold py-3 md:py-4 rounded-lg hover:bg-yellow-200 dark:hover:bg-yellow-500/30 transition-colors duration-200 text-sm md:text-base">
                             <XIcon />
                             <span>Needs Review</span>
                         </button>
-                        <button onClick={() => handleNextCard(true)} className="flex-1 flex items-center justify-center gap-2 bg-green-100 dark:bg-green-500/20 text-green-800 dark:text-green-300 font-bold py-4 rounded-lg hover:bg-green-200 dark:hover:bg-green-500/30 transition-colors duration-200">
+                        <button onClick={() => handleNextCard(true)} className="flex-1 flex items-center justify-center gap-2 bg-green-100 dark:bg-green-500/20 text-green-800 dark:text-green-300 font-bold py-3 md:py-4 rounded-lg hover:bg-green-200 dark:hover:bg-green-500/30 transition-colors duration-200 text-sm md:text-base">
                             <CheckIcon />
                             <span>I Knew This</span>
                         </button>
                     </>
                 ) : (
-                    <button onClick={handleFlip} className="w-full md:w-1/2 flex items-center justify-center gap-2 bg-white dark:bg-transparent text-primary font-bold py-4 rounded-lg border-2 border-primary hover:bg-primary-light dark:hover:bg-primary/20 transition-colors duration-200">
+                    <button onClick={handleFlip} className="w-full md:w-1/2 flex items-center justify-center gap-2 bg-white dark:bg-transparent text-primary font-bold py-3 md:py-4 rounded-lg border-2 border-primary hover:bg-primary-light dark:hover:bg-primary/20 transition-colors duration-200 text-sm md:text-base">
                         <FlipIcon />
                         <span>Flip Card</span>
                     </button>
@@ -628,8 +628,8 @@ const Flashcards: React.FC = () => {
         <div className="space-y-6">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                 <div>
-                    <h1 className="text-3xl font-bold text-slate-800 dark:text-white">Flashcard Decks</h1>
-                    <p className="text-slate-600 dark:text-slate-400">Select a deck to start studying or create a new one.</p>
+                    <h1 className="text-2xl md:text-3xl font-bold text-slate-800 dark:text-white">Flashcard Decks</h1>
+                    <p className="text-sm md:text-base text-slate-600 dark:text-slate-400">Select a deck to start studying or create a new one.</p>
                 </div>
                 <div className="flex flex-col sm:flex-row items-center gap-4">
                     <button onClick={() => setReminderModalVisible(true)} className="flex items-center justify-center gap-2 font-semibold text-primary py-2 px-5 rounded-lg border-2 border-primary hover:bg-primary-light dark:hover:bg-primary/20 transition-colors duration-200 w-full sm:w-auto">
@@ -648,12 +648,12 @@ const Flashcards: React.FC = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {displayDecks.map((deck) => (
-                    <div key={deck.id} onClick={() => setSearchParams({ deck: deck.id })} className="bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-slate-700 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 cursor-pointer flex flex-col">
-                        <h3 className="font-bold text-lg text-slate-800 dark:text-slate-50">{deck.name}</h3>
-                        <p className="text-sm text-slate-600 dark:text-slate-400">{deck.subject}</p>
-                        <div className="mt-4 pt-4 border-t border-gray-200 dark:border-slate-600 flex justify-between items-center">
-                            <span className="text-slate-600 dark:text-slate-300">{deck.cards.length} cards</span>
-                            <span className="font-semibold text-primary">View Deck</span>
+                    <div key={deck.id} onClick={() => setSearchParams({ deck: deck.id })} className="bg-white dark:bg-gray-800 p-5 rounded-xl border border-gray-100 dark:border-slate-700 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 cursor-pointer flex flex-col group">
+                        <h3 className="font-bold text-base md:text-lg text-slate-800 dark:text-slate-50 group-hover:text-primary transition-colors">{deck.name}</h3>
+                        <p className="text-xs md:text-sm text-slate-500 dark:text-slate-400 mt-1">{deck.subject}</p>
+                        <div className="mt-6 pt-4 border-t border-gray-50 dark:border-slate-700/50 flex justify-between items-center">
+                            <span className="text-xs md:text-sm text-slate-500 dark:text-slate-400">{deck.cards.length} cards</span>
+                            <span className="text-xs md:text-sm font-bold text-primary opacity-0 group-hover:opacity-100 transition-opacity">Study Now →</span>
                         </div>
                     </div>
                 ))}

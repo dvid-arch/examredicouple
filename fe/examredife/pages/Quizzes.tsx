@@ -371,9 +371,9 @@ const Quizzes: React.FC = () => {
         <div className="space-y-6">
             <SchemaMarkup type="Quiz" data={quizSchemaData} />
             <Card>
-                <h1 className="text-3xl font-bold text-slate-800 dark:text-white">Practice For UTME</h1>
-                <p className="text-slate-600 dark:text-slate-400 mt-2">Choose your practice mode. Take a standard exam simulation or create a custom quiz tailored to your needs.</p>
-                <div className="mt-4 flex border border-gray-200 dark:border-slate-700 rounded-lg p-1 bg-gray-50 dark:bg-gray-800 max-w-sm">
+                <h1 className="text-2xl sm:text-3xl font-bold text-slate-800 dark:text-white">Practice For UTME</h1>
+                <p className="text-slate-600 dark:text-slate-400 mt-2 text-sm sm:text-base">Choose your practice mode. Take a standard exam simulation or create a custom quiz tailored to your needs.</p>
+                <div className="mt-4 flex border border-gray-200 dark:border-slate-700 rounded-lg p-1 bg-gray-50 dark:bg-gray-800 w-full sm:max-w-sm">
                     <button
                         onClick={() => navigate('/practice/standard')}
                         className={`flex-1 py-2 px-4 rounded-md text-sm font-semibold transition-colors ${practiceMode === 'standard' ? 'bg-primary text-white shadow' : 'text-slate-600 dark:text-slate-300'}`}
@@ -423,7 +423,7 @@ const Quizzes: React.FC = () => {
                                         const isSelectedByAdmin = adminStandardSelections.includes(subject);
 
                                         return (
-                                            <div key={subject} className={`flex items-center justify-between gap-4 p-4 rounded-lg border-2 transition-all ${isAdmin && isSelectedByAdmin ? 'border-primary bg-primary/5 dark:bg-primary/10' :
+                                            <div key={subject} className={`flex items-center justify-between gap-3 sm:gap-4 p-3 sm:p-4 rounded-lg border-2 transition-all ${isAdmin && isSelectedByAdmin ? 'border-primary bg-primary/5 dark:bg-primary/10' :
                                                 isAdmin && !isSelectedByAdmin ? 'border-slate-200 dark:border-slate-700 bg-white/50 dark:bg-slate-800/30 opacity-60' :
                                                     isCompulsory ? 'border-primary/50 bg-primary/5 dark:bg-primary/10' :
                                                         'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/50'

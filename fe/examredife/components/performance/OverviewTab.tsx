@@ -53,28 +53,28 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
 
                 {/* Left: Overall Estimated Score */}
                 <div className="lg:col-span-5 flex flex-col">
-                    <Card className="p-8 h-full flex flex-col justify-center items-center relative overflow-hidden bg-gradient-to-br from-primary/10 to-transparent border-primary/20">
+                    <Card className="p-6 sm:p-8 h-full flex flex-col justify-center items-center relative overflow-hidden bg-gradient-to-br from-primary/10 to-transparent border-primary/20">
                         <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
-                            <svg className="w-32 h-32" fill="currentColor" viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                            <svg className="w-24 sm:w-32 h-24 sm:h-32" fill="currentColor" viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
                         </div>
-                        <p className="text-slate-500 dark:text-slate-400 text-sm font-bold uppercase tracking-widest mb-2 z-10">Estimated UTME Score</p>
+                        <p className="text-slate-500 dark:text-slate-400 text-[10px] sm:text-sm font-bold uppercase tracking-widest mb-2 z-10">Estimated UTME Score</p>
 
                         <div className="relative flex items-center justify-center mb-4 z-10 w-full">
-                            <h2 className="text-7xl lg:text-8xl font-black text-slate-800 dark:text-white tracking-tighter drop-shadow-sm">
+                            <h2 className="text-5xl sm:text-7xl lg:text-8xl font-black text-slate-800 dark:text-white tracking-tighter drop-shadow-sm">
                                 {estimatedScore}
-                                <span className="text-2xl lg:text-3xl text-slate-400 font-bold tracking-normal ml-1">/400</span>
+                                <span className="text-xl sm:text-2xl lg:text-3xl text-slate-400 font-bold tracking-normal ml-1">/400</span>
                             </h2>
                         </div>
 
-                        <div className="flex items-center gap-4 z-10 mt-4 bg-white/50 dark:bg-slate-900/50 backdrop-blur-md px-6 py-3 rounded-2xl border border-white/50 dark:border-slate-700/50">
+                        <div className="flex items-center gap-3 sm:gap-4 z-10 mt-4 bg-white/50 dark:bg-slate-900/50 backdrop-blur-md px-4 py-2 sm:px-6 sm:py-3 rounded-xl sm:rounded-2xl border border-white/50 dark:border-slate-700/50">
                             <div className="text-center">
-                                <p className="text-xs text-slate-500 uppercase font-black tracking-wider mb-0.5">Sessions</p>
-                                <p className="text-xl font-bold text-slate-800 dark:text-slate-200">{quizzesTaken}</p>
+                                <p className="text-[10px] text-slate-500 uppercase font-black tracking-wider mb-0.5">Sessions</p>
+                                <p className="text-lg sm:text-xl font-bold text-slate-800 dark:text-slate-200">{quizzesTaken}</p>
                             </div>
-                            <div className="w-px h-8 bg-slate-300 dark:bg-slate-700"></div>
+                            <div className="w-px h-6 sm:h-8 bg-slate-300 dark:bg-slate-700"></div>
                             <div className="text-center">
-                                <p className="text-xs text-slate-500 uppercase font-black tracking-wider mb-0.5">Current Streak</p>
-                                <p className="text-xl font-bold text-orange-500 flex items-center justify-center gap-1">🔥 {streak}</p>
+                                <p className="text-[10px] text-slate-500 uppercase font-black tracking-wider mb-0.5">Streak</p>
+                                <p className="text-lg sm:text-xl font-bold text-orange-500 flex items-center justify-center gap-1">🔥 {streak}</p>
                             </div>
                         </div>
                     </Card>
@@ -198,32 +198,32 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
             {/* Bottom Section: AI Recommendations */}
             <Card className="p-0 border-none bg-gradient-to-r from-primary to-indigo-600 shadow-xl shadow-primary/20 overflow-hidden relative">
                 <div className="absolute top-[-50%] right-[-10%] w-[50%] h-[200%] bg-white/10 blur-3xl rotate-12 transform-gpu"></div>
-                <div className="p-8 sm:p-10 relative z-10">
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
-                        <div className="w-16 h-16 bg-white shrink-0 rounded-[1.5rem] flex items-center justify-center shadow-lg rotate-3">
-                            <svg className="w-8 h-8 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="p-6 sm:p-10 relative z-10">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6">
+                        <div className="w-12 h-12 sm:w-16 sm:h-16 bg-white shrink-0 rounded-xl sm:rounded-[1.5rem] flex items-center justify-center shadow-lg rotate-3">
+                            <svg className="w-6 h-6 sm:w-8 sm:h-8 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                                <rect x="0" y="0" width="24" height="24" stroke="none" /> {/* Hidden transparent rect bounds box */}
+                                <rect x="0" y="0" width="24" height="24" stroke="none" />
                             </svg>
                         </div>
                         <div className="flex-1">
-                            <h3 className="text-2xl font-black text-white mb-2">Targeted Action Plan</h3>
+                            <h3 className="text-xl sm:text-2xl font-black text-white mb-2">Targeted Action Plan</h3>
                             {weakSubjects.length > 0 ? (
-                                <p className="text-white/90 leading-relaxed font-medium">
+                                <p className="text-sm sm:text-base text-white/90 leading-relaxed font-medium">
                                     To push your Estimated Score higher, focus your efforts on <span className="font-bold underline decoration-white/50 underline-offset-4">{weakSubjects.slice(0, 2).join(' and ')}</span>.
                                     Mastering weak topics here can dramatically bump your 400-point total.
                                 </p>
                             ) : (
-                                <p className="text-white/90 leading-relaxed font-medium">
+                                <p className="text-sm sm:text-base text-white/90 leading-relaxed font-medium">
                                     Your 4 core subjects are performing exceptionally well. Keep maintaining this momentum with comprehensive mock exams.
                                 </p>
                             )}
                         </div>
-                        <div className="shrink-0 flex flex-col gap-3 w-full sm:w-auto mt-4 sm:mt-0">
-                            <Link to="/study-guides" className="bg-white text-primary text-center font-bold py-3 px-6 rounded-xl hover:scale-105 active:scale-95 transition-all shadow-md">
+                        <div className="shrink-0 flex flex-col gap-2.5 sm:gap-3 w-full sm:w-auto mt-2 sm:mt-0">
+                            <Link to="/study-guides" className="bg-white text-primary text-center font-bold py-2.5 sm:py-3 px-6 rounded-xl hover:scale-105 active:scale-95 transition-all shadow-md text-sm sm:text-base">
                                 Deep Dive Concepts
                             </Link>
-                            <Link to="/practice" className="bg-transparent border-2 border-white/30 text-white text-center font-bold py-3 px-6 rounded-xl hover:bg-white/10 transition-all">
+                            <Link to="/practice" className="bg-transparent border-2 border-white/30 text-white text-center font-bold py-2.5 sm:py-3 px-6 rounded-xl hover:bg-white/10 transition-all text-sm sm:text-base">
                                 Take a Practice Test
                             </Link>
                         </div>

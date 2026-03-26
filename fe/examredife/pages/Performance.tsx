@@ -289,15 +289,15 @@ const Performance: React.FC = () => {
             {/* Header & Overview Stats */}
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
                 <div>
-                    <h1 className="text-4xl font-extrabold text-slate-800 dark:text-white tracking-tight">Student Command Center</h1>
-                    <p className="text-slate-500 dark:text-slate-400 mt-1 font-medium italic">Transforming data into your success roadmap.</p>
+                    <h1 className="text-2xl sm:text-4xl font-extrabold text-slate-800 dark:text-white tracking-tight">Student Command Center</h1>
+                    <p className="text-sm sm:text-base text-slate-500 dark:text-slate-400 mt-1 font-medium italic">Transforming data into your success roadmap.</p>
                 </div>
-                <div className="flex gap-2 bg-slate-100 dark:bg-slate-800 p-1.5 rounded-2xl w-fit">
+                <div className="flex gap-1 sm:gap-2 bg-slate-100 dark:bg-slate-800 p-1 sm:p-1.5 rounded-xl sm:rounded-2xl w-full sm:w-fit overflow-x-auto no-scrollbar">
                     {(['overview', 'mastery', 'history'] as TabType[]).map((tab) => (
                         <button
                             key={tab}
                             onClick={() => setActiveTab(tab)}
-                            className={`px-6 py-2.5 rounded-xl font-bold text-sm transition-all ${activeTab === tab
+                            className={`flex-1 sm:flex-none px-3 sm:px-6 py-2 sm:py-2.5 rounded-lg sm:rounded-xl font-bold text-xs sm:text-sm transition-all whitespace-nowrap ${activeTab === tab
                                 ? 'bg-white dark:bg-slate-700 text-primary shadow-sm ring-1 ring-slate-200 dark:ring-slate-600'
                                 : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
                                 }`}

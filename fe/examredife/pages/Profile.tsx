@@ -189,42 +189,42 @@ const Profile: React.FC = () => {
         <div className="max-w-4xl mx-auto">
             <Card className="p-0 overflow-hidden">
                 {/* Profile Header */}
-                <div className="bg-slate-50 dark:bg-slate-800/50 p-6 md:p-8 flex flex-col md:flex-row items-center gap-6">
+                <div className="bg-slate-50 dark:bg-slate-800/50 p-6 sm:p-8 flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
                     <UserAvatar
                         name={user.name}
                         photoURL={user.photoURL}
                         size="xl"
-                        className="border-4 border-white dark:border-slate-600 shadow-lg"
+                        className="border-4 border-white dark:border-slate-600 shadow-lg w-20 h-20 sm:w-24 sm:h-24"
                     />
-                    <div className="flex-1 text-center md:text-left">
+                    <div className="flex-1 text-center sm:text-left min-w-0">
                         {!isEditing ? (
-                            <div className="flex items-center justify-center md:justify-start gap-3">
-                                <h1 className="text-3xl font-bold text-slate-800 dark:text-white">{user.name}</h1>
-                                <button onClick={() => setIsEditing(true)} className="text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-accent transition-colors" aria-label="Edit name">
+                            <div className="flex items-center justify-center sm:justify-start gap-2 sm:gap-3">
+                                <h1 className="text-2xl sm:text-3xl font-bold text-slate-800 dark:text-white truncate">{user.name}</h1>
+                                <button onClick={() => setIsEditing(true)} className="text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-accent transition-colors shrink-0" aria-label="Edit name">
                                     <EditIcon />
                                 </button>
                             </div>
                         ) : (
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2 max-w-sm mx-auto sm:mx-0">
                                 <input
                                     type="text"
                                     value={name}
                                     onChange={(e) => setName(e.target.value)}
                                     onKeyDown={(e) => e.key === 'Enter' && handleSave()}
-                                    className="text-3xl font-bold bg-white dark:bg-slate-700 border border-gray-300 dark:border-slate-600 rounded-lg px-3 py-1 focus:outline-none focus:ring-2 focus:ring-primary w-full"
+                                    className="text-xl sm:text-3xl font-bold bg-white dark:bg-slate-700 border border-gray-300 dark:border-slate-600 rounded-lg px-3 py-1 focus:outline-none focus:ring-2 focus:ring-primary w-full"
                                     autoFocus
                                 />
-                                <button onClick={handleSave} className="bg-primary text-white font-bold p-2.5 rounded-lg hover:bg-accent" aria-label="Save name">
+                                <button onClick={handleSave} className="bg-primary text-white font-bold p-2 sm:p-2.5 rounded-lg hover:bg-accent shrink-0" aria-label="Save name">
                                     <SaveIcon />
                                 </button>
                             </div>
                         )}
-                        <p className="text-slate-600 dark:text-slate-400 mt-1">{user.email}</p>
+                        <p className="text-sm sm:text-base text-slate-600 dark:text-slate-400 mt-1 truncate">{user.email}</p>
                     </div>
                 </div>
 
                 {/* Main Content */}
-                <div className="p-6 md:p-8 grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="p-6 sm:p-8 grid grid-cols-1 md:grid-cols-2 gap-8">
                     {/* Left Column */}
                     <div className="space-y-6">
                         <h2 className="text-xl font-bold text-slate-800 dark:text-white border-b dark:border-slate-700 pb-2">Account</h2>

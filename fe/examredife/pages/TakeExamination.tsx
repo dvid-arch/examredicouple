@@ -735,19 +735,19 @@ const TakeExamination: React.FC = () => {
             className="relative flex flex-col bg-gray-50 font-sans text-gray-900 overflow-hidden w-full"
             style={{ height: examHeight }}
         >
-            <header className="bg-white text-gray-800 px-4 py-3 sm:px-6 sm:py-4 flex justify-between items-center shadow-sm flex-shrink-0 z-20 gap-2 h-16 sm:h-20">
-                <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-primary-light flex-shrink-0 flex items-center justify-center text-primary font-bold text-sm sm:text-base">
+            <header className="bg-white text-gray-800 px-3 py-2 sm:px-6 sm:py-4 flex justify-between items-center shadow-sm flex-shrink-0 z-20 gap-2 h-14 sm:h-20">
+                <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                    <div className="w-7 h-7 sm:w-10 sm:h-10 rounded-full bg-primary-light flex-shrink-0 flex items-center justify-center text-primary font-bold text-[10px] sm:text-base">
                         {examTitle ? examTitle.charAt(0) : 'E'}
                     </div>
                     <div className="min-w-0">
-                        <div className="font-bold text-sm sm:text-lg leading-tight truncate">{examTitle || 'Practice Session'}</div>
-                        <div className="text-[10px] sm:text-xs text-gray-500 font-medium uppercase tracking-wider hidden sm:block">{mode === 'study' ? 'Study Mode' : 'Timed Mode'}</div>
+                        <div className="font-bold text-xs sm:text-lg leading-tight truncate">{examTitle || 'Practice Session'}</div>
+                        <div className="text-[9px] sm:text-xs text-gray-500 font-medium uppercase tracking-wider hidden sm:block">{mode === 'study' ? 'Study Mode' : 'Timed Mode'}</div>
                     </div>
                 </div>
 
                 {mode !== 'study' && (
-                    <div className="bg-orange-50 text-orange-700 font-bold text-sm sm:text-xl font-mono tracking-widest px-3 py-1 sm:px-6 sm:py-2 rounded-full border border-orange-100 shadow-sm whitespace-nowrap">
+                    <div className="bg-orange-50 text-orange-700 font-bold text-xs sm:text-xl font-mono tracking-widest px-2 py-1 sm:px-6 sm:py-2 rounded-full border border-orange-100 shadow-sm whitespace-nowrap">
                         {formatTime(timeLeft)}
                     </div>
                 )}
@@ -756,7 +756,7 @@ const TakeExamination: React.FC = () => {
                     <button
                         onClick={() => { if (window.confirm('Are you sure you want to submit?')) handleSubmit(); }}
                         disabled={!canSubmit}
-                        className="bg-primary hover:bg-blue-700 text-white font-bold py-2 px-4 sm:py-2.5 sm:px-6 rounded-full transition-all shadow-md shadow-blue-200 hover:shadow-lg disabled:opacity-50 disabled:shadow-none disabled:cursor-not-allowed text-xs sm:text-base whitespace-nowrap flex items-center justify-center"
+                        className="bg-primary hover:bg-blue-700 text-white font-bold py-1.5 px-3 sm:py-2.5 sm:px-6 rounded-full transition-all shadow-md shadow-blue-200 hover:shadow-lg disabled:opacity-50 disabled:shadow-none disabled:cursor-not-allowed text-[10px] sm:text-base whitespace-nowrap flex items-center justify-center"
                         aria-describedby="submit-tooltip"
                     >
                         <span className="sm:inline hidden">Finish & Submit</span>
@@ -774,13 +774,13 @@ const TakeExamination: React.FC = () => {
             <div className="flex-1 flex flex-col lg:flex-row overflow-hidden relative w-full">
                 <main className="flex-1 flex flex-col w-full max-w-5xl mx-auto p-4 sm:p-6 lg:p-8 overflow-y-auto">
                     {subjects.length > 1 && (
-                        <div className="flex-shrink-0 mb-4 sm:mb-6 overflow-x-auto py-3 -mx-4 px-4 sm:mx-0 sm:px-0 no-scrollbar w-[calc(100%+2rem)] sm:w-full">
-                            <div className="flex items-center gap-2 min-w-max h-12">
+                        <div className="flex-shrink-0 mb-4 sm:mb-6 overflow-x-auto py-2 -mx-4 px-4 sm:mx-0 sm:px-0 no-scrollbar w-[calc(100%+2rem)] sm:w-full">
+                            <div className="flex items-center gap-2 min-w-max h-10 sm:h-12">
                                 {subjects.map(subject => (
                                     <button
                                         key={subject}
                                         onClick={() => handleSubjectChange(subject)}
-                                        className={`py-2 px-4 sm:px-5 rounded-full font-bold text-xs sm:text-sm transition-all whitespace-nowrap shadow-sm border ${activeSubject === subject
+                                        className={`py-1.5 px-3 sm:px-5 rounded-full font-bold text-[11px] sm:text-sm transition-all whitespace-nowrap shadow-sm border ${activeSubject === subject
                                             ? 'bg-primary text-white border-primary shadow-md transform scale-105'
                                             : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
                                             }`}
@@ -793,7 +793,7 @@ const TakeExamination: React.FC = () => {
                     )}
 
                     <div className="flex-1 flex flex-col">
-                        <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 sm:p-10 flex-1 flex flex-col">
+                        <div className="bg-white rounded-2xl sm:rounded-3xl shadow-sm border border-gray-100 p-4 sm:p-10 flex-1 flex flex-col">
                             {currentQuestion ? (
                                 <>
                                     <div className="flex items-center justify-between mb-6 pb-4 border-b border-gray-100">
