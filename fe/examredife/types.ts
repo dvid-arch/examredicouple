@@ -118,6 +118,7 @@ export interface LeaderboardScore {
   name: string;
   score: number;
   totalQuestions: number;
+  estimatedScore?: number;
   date: number;
 }
 

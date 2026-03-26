@@ -55,7 +55,7 @@ const UtmeChallenge: React.FC = () => {
     const navigate = useNavigate();
     const { papers: allPapers, isLoading: isLoadingPapers, fetchPapers } = usePastQuestions();
     const [searchParams, setSearchParams] = useSearchParams();
-    const { addActivity } = useUserProgress();
+    const { addActivity, estimatedScore: currentEstScore } = useUserProgress();
     const [gameState, setGameState] = useState<GameState>(
         (searchParams.get('step') as GameState) || 'lobby'
     );
@@ -155,7 +155,7 @@ const UtmeChallenge: React.FC = () => {
             name: user.name,
             score: currentScore,
             totalQuestions: TOTAL_QUESTIONS,
-            answers: answers,
+            estimatedScore: currentEstScore,
             date: Date.now(),
         };
 
@@ -457,12 +457,24 @@ const UtmeChallenge: React.FC = () => {
                 {isLoadingData ? <p>Loading leaderboard...</p> : leaderboard.length > 0 ? (
                     <ol className="list-decimal list-inside space-y-2">
                         {leaderboard.map((entry, index) => (
-                            <li key={index} className="p-2 rounded-lg bg-gray-50 flex justify-between items-center">
-                                <div>
-                                    <span className="font-semibold text-slate-700">{index + 1}. {entry.name}</span>
-                                    <span className="text-sm text-slate-500 ml-2">({new Date(entry.date).toLocaleDateString()})</span>
+                            <li key={index} className="p-3 rounded-xl bg-gray-50 flex justify-between items-center border border-gray-100 shadow-sm">
+                                <div className="flex items-center gap-3">
+                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${index < 3 ? 'bg-yellow-100 text-yellow-700' : 'bg-gray-100 text-gray-500'}`}>
+                                        {index + 1}
+                                    </div>
+                                    <div>
+                                        <div className="font-bold text-slate-800">{entry.name}</div>
+                                        <div className="text-[10px] text-slate-400 uppercase tracking-tighter">
+                                            {new Date(entry.date).toLocaleDateString()} • Challenge Score: {entry.score}/{entry.totalQuestions}
+                                        </div>
+                                    </div>
                                 </div>
-                                <span className="font-bold text-primary">{entry.score}/{entry.totalQuestions}</span>
+                                <div className="text-right">
+                                    <div className="text-xl font-black text-primary leading-none">
+                                        {entry.estimatedScore || Math.round((entry.score / entry.totalQuestions) * 400)}
+                                    </div>
+                                    <div className="text-[9px] text-slate-500 font-bold uppercase">Est. UTME Score</div>
+                                </div>
                             </li>
                         ))}
                     </ol>
