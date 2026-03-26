@@ -10,6 +10,7 @@ interface FilterSidebarProps {
     isOpen: boolean;
     onClose: () => void;
     isPro?: boolean;
+    isAdmin?: boolean;
 }
 
 const FilterSidebar: React.FC<FilterSidebarProps> = ({
@@ -21,7 +22,8 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
     onYearChange,
     isOpen,
     onClose,
-    isPro = false
+    isPro = false,
+    isAdmin = false
 }) => {
     return (
         <div className={`fixed inset-0 z-40 lg:relative lg:z-0 lg:block lg:w-56 ${isOpen ? 'block' : 'hidden'}`}>
@@ -79,7 +81,7 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
                                             }`}
                                     >
                                         {year === 'all' ? 'All' : year}
-                                        {year !== 'all' && Number(year) !== 2024 && !isPro && <span className="text-[10px]">🔒</span>}
+                                        {year !== 'all' && !isAdmin && ((isPro && Number(year) < 2000) || (!isPro && Number(year) !== 2024)) && <span className="text-[10px]">🔒</span>}
                                     </button>
                                 ))}
                             </div>

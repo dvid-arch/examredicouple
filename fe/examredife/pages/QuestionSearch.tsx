@@ -92,6 +92,7 @@ const QuestionSearch: React.FC = () => {
     }, [fetchPapers, fetchGuides]);
 
     const isAdmin = user?.role === 'admin';
+    const isPro = user?.subscription === 'pro' || isAdmin;
 
     const allowedSubjectsList = useMemo(() => {
         const allSubjects = [...new Set(allPapers.map(p => p.subject))];
@@ -214,15 +215,26 @@ const QuestionSearch: React.FC = () => {
                 selectedYear={selectedYear}
                 onSubjectChange={setSelectedSubject}
                 onYearChange={(year) => {
-                    if (year !== 'all' && Number(year) !== 2024 && !isAdmin && user?.subscription !== 'pro') {
-                        alert(`🔒 Year ${year} is an ExamRedi Pro feature. Please upgrade to unlock all past papers (1970 - 2025).`);
-                        return;
+                    if (year !== 'all' && !isAdmin) {
+                        const y = Number(year);
+                        if (isPro) {
+                            if (y < 2000) {
+                                alert(`🔒 Year ${year} papers have technical issues. Please select year 2000 or above (2000 - 2025).`);
+                                return;
+                            }
+                        } else {
+                            if (y !== 2024) {
+                                alert(`🔒 Year ${year} is an ExamRedi Pro feature. Please upgrade to unlock all past papers (2000 - 2025).`);
+                                return;
+                            }
+                        }
                     }
                     setSelectedYear(year);
                 }}
                 isOpen={isFilterSidebarOpen}
                 onClose={() => setIsFilterSidebarOpen(false)}
-                isPro={isAdmin || user?.subscription === 'pro'}
+                isPro={isPro}
+                isAdmin={isAdmin}
             />
 
             {/* Main Content Area */}
@@ -279,7 +291,12 @@ const QuestionSearch: React.FC = () => {
                             {!isAdmin && user?.subscription !== 'pro' && (
                                 <p className="text-[10px] font-bold text-amber-600 dark:text-amber-400 flex items-center gap-1 mt-1">
                                     <span>🔒</span> Currently searching Year 2024 papers only. 
-                                    <Link to="/profile" className="underline hover:text-amber-700">Upgrade to Pro to search all years (1970–2025).</Link>
+                                    <Link to="/profile" className="underline hover:text-amber-700">Upgrade to Pro to search all years (2000–2025).</Link>
+                                </p>
+                            )}
+                            {isPro && !isAdmin && (
+                                <p className="text-[10px] font-bold text-blue-600 dark:text-blue-400 flex items-center gap-1 mt-1">
+                                    <span>ℹ️</span> Searching years 2000–2025. Pre-2000 papers are restricted due to technical issues.
                                 </p>
                             )}
                         </div>

@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { usePwaInstall } from '../contexts/PwaContext.tsx';
 
@@ -15,14 +15,32 @@ const Logo = () => (
     </div>
 );
 
+/** Detect if this visitor has logged in before by checking for a stored refresh token */
+const useReturningUser = () => {
+    const [isReturning, setIsReturning] = useState(false);
+    useEffect(() => {
+        try {
+            const hasToken = !!localStorage.getItem('refreshToken');
+            const hasVisited = !!localStorage.getItem('examredi_visited');
+            setIsReturning(hasToken || hasVisited);
+            // Mark as visited for future loads
+            if (!hasVisited) localStorage.setItem('examredi_visited', '1');
+        } catch {
+            // localStorage may be blocked in private/incognito — treat as new
+        }
+    }, []);
+    return isReturning;
+};
+
 const LandingHeader: React.FC = () => {
     const { canInstall, showInstallBanner } = usePwaInstall();
+    const isReturning = useReturningUser();
 
     return (
         <header className="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-20">
             <div className="container mx-auto px-4 py-3 flex justify-between items-center">
                 <Logo />
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-3">
                     {canInstall && (
                         <button
                             onClick={showInstallBanner}
@@ -31,8 +49,27 @@ const LandingHeader: React.FC = () => {
                             Install App
                         </button>
                     )}
-                    <Link to="/login" className="font-semibold text-primary hover:underline">Login</Link>
-                    <Link to="/register" className="bg-primary text-white font-bold py-2 px-5 rounded-lg hover:bg-accent transition-colors">Get Started</Link>
+                    {isReturning ? (
+                        <>
+                            <Link
+                                to="/register"
+                                className="text-sm text-slate-500 hover:text-slate-700 transition-colors"
+                            >
+                                New here?
+                            </Link>
+                            <Link
+                                to="/login"
+                                className="bg-primary text-white font-bold py-2 px-5 rounded-lg hover:bg-accent transition-colors flex items-center gap-1.5"
+                            >
+                                <span>👋</span> Welcome Back
+                            </Link>
+                        </>
+                    ) : (
+                        <>
+                            <Link to="/login" className="font-semibold text-primary hover:underline">Login</Link>
+                            <Link to="/register" className="bg-primary text-white font-bold py-2 px-5 rounded-lg hover:bg-accent transition-colors">Get Started</Link>
+                        </>
+                    )}
                 </div>
             </div>
         </header>
@@ -50,6 +87,8 @@ const FeatureCard: React.FC<{ title: string; description: string; icon: React.Re
 );
 
 const LandingPage: React.FC = () => {
+    const isReturning = useReturningUser();
+
     return (
         <div className="bg-slate-50 min-h-screen">
             <LandingHeader />
@@ -64,9 +103,15 @@ const LandingPage: React.FC = () => {
                             ExamRedi provides everything you need to succeed. From interactive practice sessions and AI tutors to dynamic study guides and educational games.
                         </p>
                         <div className="mt-10">
-                            <Link to="/register" className="bg-primary text-white font-bold py-4 px-10 rounded-lg text-lg hover:bg-accent transition-transform hover:scale-105 inline-block">
-                                Start Studying for Free
-                            </Link>
+                            {isReturning ? (
+                                <Link to="/login" className="bg-primary text-white font-black py-4 px-10 rounded-2xl text-lg hover:bg-accent transition-all hover:scale-105 inline-block shadow-xl shadow-primary/20">
+                                    Continue My Progress
+                                </Link>
+                            ) : (
+                                <Link to="/register" className="bg-primary text-white font-bold py-4 px-10 rounded-lg text-lg hover:bg-accent transition-transform hover:scale-105 inline-block">
+                                    Start Studying for Free
+                                </Link>
+                            )}
                         </div>
                     </div>
                 </section>
@@ -162,7 +207,7 @@ const LandingPage: React.FC = () => {
                                 </div>
                                 <div className="flex items-center gap-3">
                                     <svg className="h-6 w-6 text-green-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
-                                    <span className="font-semibold">Full Past Question Access (1978-2024)</span>
+                                    <span className="font-semibold">Full Past Question Access (1978-2025)</span>
                                 </div>
                                 <div className="flex items-center gap-3">
                                     <svg className="h-6 w-6 text-green-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
@@ -174,9 +219,15 @@ const LandingPage: React.FC = () => {
                                 </div>
                             </div>
 
-                            <Link to="/register" className="bg-primary text-white font-black py-4 px-12 rounded-2xl text-xl hover:bg-accent transition-all hover:scale-105 inline-block shadow-xl shadow-primary/20 relative z-10">
-                                Upgrade My Learning
-                            </Link>
+                            {isReturning ? (
+                                <Link to="/login" className="bg-primary text-white font-black py-4 px-12 rounded-2xl text-xl hover:bg-accent transition-all hover:scale-105 inline-block shadow-xl shadow-primary/20 relative z-10">
+                                    Resume Pro Learning
+                                </Link>
+                            ) : (
+                                <Link to="/register" className="bg-primary text-white font-black py-4 px-12 rounded-2xl text-xl hover:bg-accent transition-all hover:scale-105 inline-block shadow-xl shadow-primary/20 relative z-10">
+                                    Upgrade My Learning
+                                </Link>
+                            )}
                         </div>
                     </div>
                 </section>

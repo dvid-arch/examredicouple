@@ -129,8 +129,11 @@ const Quizzes: React.FC = () => {
             subjects.forEach(subject => {
                 if (!next[subject]) {
                     const subjectYears = yearsBySubject.get(subject) || [];
-                    // Default to 2024 (teaser year) for free users; most recent for pro
-                    const defaultYear = isPro ? (subjectYears[0] || 'random') : (subjectYears.includes(2024) ? 2024 : (subjectYears[0] || 'random'));
+                    // Default to 2024 (teaser year) for free users; most recent (>=2000) for pro
+                    const allowedProYears = subjectYears.filter(y => y >= 2000);
+                    const defaultYear = isAdmin ? (subjectYears[0] || 'random') : 
+                                      isPro ? (allowedProYears[0] || 'random') : 
+                                      (subjectYears.includes(2024) ? 2024 : (subjectYears[0] || 'random'));
                     
                     next[subject] = {
                         year: defaultYear as any,
@@ -213,8 +216,13 @@ const Quizzes: React.FC = () => {
             count: standardSelections[subject]?.count ?? (getSubjectKey(subject) === 'english' ? 60 : 40),
         }));
 
-        if (selections.some(s => s.year !== 'random' && !isPro)) {
-            alert('One or more selected years are ExamRedi Pro features. Please select year 2024 or upgrade to Pro.');
+        if (!isAdmin && selections.some(s => {
+            if (s.year === 'random') return false;
+            if (isPro) return s.year < 2000;
+            return s.year !== 2024;
+        })) {
+            const msg = isPro ? 'Some selected years (pre-2000) have technical issues. Please select year 2000 or above.' : 'One or more selected years are ExamRedi Pro features. Please select year 2024 or upgrade to Pro.';
+            alert(msg);
             return;
         }
 
@@ -246,8 +254,13 @@ const Quizzes: React.FC = () => {
             count: data.count
         }));
 
-        if (selectionsArray.some(s => s.year !== 'random' && !isPro)) {
-            alert('One or more selected years are ExamRedi Pro features. Please select year 2024 or upgrade to Pro.');
+        if (!isAdmin && selectionsArray.some(s => {
+            if (s.year === 'random') return false;
+            if (isPro) return s.year < 2000;
+            return s.year !== 2024;
+        })) {
+            const msg = isPro ? 'Some selected years (pre-2000) have technical issues. Please select year 2000 or above.' : 'One or more selected years are ExamRedi Pro features. Please select year 2024 or upgrade to Pro.';
+            alert(msg);
             return;
         }
 
@@ -452,7 +465,7 @@ const Quizzes: React.FC = () => {
                                                                 className="bg-white dark:bg-gray-800 border border-gray-300 dark:border-slate-600 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                                                             >
                                                                 {subjectYears.map(year => {
-                                                                    const isLocked = !isPro && year !== 2024; // 2024 is the free teaser year
+                                                                    const isLocked = !isAdmin && (isPro ? year < 2000 : year !== 2024);
                                                                     return (
                                                                         <option key={year} value={year}>
                                                                             {year} {isLocked ? '🔒 (Pro)' : ''}
@@ -531,7 +544,7 @@ const Quizzes: React.FC = () => {
                                                                 className="w-full bg-gray-100 dark:bg-gray-700 border-gray-200 dark:border-slate-600 border rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
                                                             >
                                                                 {getYearsForSubject(subject).map(year => {
-                                                                    const isLocked = !isPro && year !== 2024; // 2024 is the free teaser year
+                                                                    const isLocked = !isAdmin && (isPro ? year < 2000 : year !== 2024);
                                                                     return (
                                                                         <option key={year} value={year}>
                                                                             {year} {isLocked ? '🔒 (Pro)' : ''}
