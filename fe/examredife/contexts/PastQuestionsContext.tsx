@@ -6,13 +6,14 @@ import { getCache, setCache } from '../services/db.ts';
 // Cache keys used in IndexedDB
 // Cache keys used in IndexedDB - Bumping version to force fresh fetch after coupling
 // Cache keys used in IndexedDB - Bumping version to force fresh fetch after gating/monetization
-const CACHE_KEY_PAPERS = 'papers_v10';
-const CACHE_KEY_GUIDES = 'guides_v11';
+const CACHE_KEY_PAPERS = 'papers_v12';
+const CACHE_KEY_GUIDES = 'guides_v12';
 
 interface PastQuestionsContextType {
     papers: PastPaper[];
     guides: StudyGuide[];
     isLoading: boolean;
+    hasFetched: boolean;
     fetchPapers: (subjects?: string[], forceRefresh?: boolean) => Promise<PastPaper[]>;
     fetchFullPaper: (paperId: string) => Promise<PastPaper | null>;
     prefetchPapers: (subjects: string[], year?: number) => Promise<void>;
@@ -25,6 +26,7 @@ export const PastQuestionsProvider: React.FC<{ children: ReactNode }> = ({ child
     const [papers, setPapers] = useState<PastPaper[]>([]);
     const [guides, setGuides] = useState<StudyGuide[]>([]);
     const [isLoading, setIsLoading] = useState(false);
+    const [hasFetched, setHasFetched] = useState(false);
 
     // In-memory refs to short-circuit duplicate calls within the same session
     const hasFetchedPapersRef = useRef(false);
@@ -47,8 +49,8 @@ export const PastQuestionsProvider: React.FC<{ children: ReactNode }> = ({ child
             const cached = await getCache<PastPaper[]>(currentCacheKey);
             if (cached && cached.length > 0) {
                 console.log(`[Cache] Loaded ${cached.length} papers from IndexedDB (${currentCacheKey})`);
+                setPapers(cached);
                 if (subjectsKey === '') {
-                    setPapers(cached);
                     papersRef.current = cached;
                     hasFetchedPapersRef.current = true;
                 }
@@ -67,8 +69,8 @@ export const PastQuestionsProvider: React.FC<{ children: ReactNode }> = ({ child
             console.log(`[Cache] Fetching papers from network: ${url}`);
             const data = await apiService<PastPaper[]>(url);
             
+            setPapers(data);
             if (subjectsKey === '') {
-                setPapers(data);
                 papersRef.current = data;
                 hasFetchedPapersRef.current = true;
             }
@@ -82,6 +84,7 @@ export const PastQuestionsProvider: React.FC<{ children: ReactNode }> = ({ child
             return [];
         } finally {
             setIsLoading(false);
+            setHasFetched(true);
         }
     }, []);
 
@@ -205,11 +208,12 @@ export const PastQuestionsProvider: React.FC<{ children: ReactNode }> = ({ child
             return [];
         } finally {
             setIsLoading(false);
+            setHasFetched(true);
         }
     }, []);
 
     return (
-        <PastQuestionsContext.Provider value={{ papers, guides, isLoading, fetchPapers, fetchFullPaper, prefetchPapers, fetchGuides }}>
+        <PastQuestionsContext.Provider value={{ papers, guides, isLoading, hasFetched, fetchPapers, fetchFullPaper, prefetchPapers, fetchGuides }}>
             {children}
         </PastQuestionsContext.Provider>
     );

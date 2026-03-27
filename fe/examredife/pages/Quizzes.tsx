@@ -20,7 +20,7 @@ const Quizzes: React.FC = () => {
         description: "Interactive practice tests and past questions for ExamRedi."
     });
 
-    const { papers: allPapers, isLoading, fetchPapers, prefetchPapers } = usePastQuestions();
+    const { papers: allPapers, isLoading, hasFetched, fetchPapers, prefetchPapers } = usePastQuestions();
 
     // Prepare Schema Data
     const quizSchemaData = useMemo(() => ({
@@ -43,17 +43,17 @@ const Quizzes: React.FC = () => {
     }, [tab]);
 
     useEffect(() => {
-        // Fetch only preferred subjects (plus English) to be efficient
-        const subjectsToFetch = user?.preferredSubjects && user.preferredSubjects.length > 0 
-            ? [...new Set([...user.preferredSubjects, 'English'])]
-            : undefined;
+        // Fetch ALL metadata (only ~20KB) to ensure selection UI is fully populated
+        fetchPapers().then(() => {
+            // Background prefetch for current year (specific for this user)
+            const subjectsToPrefetch = user?.preferredSubjects && user.preferredSubjects.length > 0 
+                ? [...new Set([...user.preferredSubjects, 'English'])]
+                : undefined;
 
-        fetchPapers(subjectsToFetch).then(() => {
-            // Background prefetch for current year (most likely selection)
-            if (subjectsToFetch) {
+            if (subjectsToPrefetch) {
                 // Wait 3 seconds to ensure UI interactivity is smooth first
                 setTimeout(() => {
-                    prefetchPapers(subjectsToFetch, 2024);
+                    prefetchPapers(subjectsToPrefetch, 2024);
                 }, 3000);
             }
         });
@@ -63,9 +63,11 @@ const Quizzes: React.FC = () => {
     const isPro = user?.subscription === 'pro' || isAdmin;
     const allSubjectsFromPapers = useMemo(() => [...new Set(allPapers.map(p => p.subject))].sort(), [allPapers]);
 
-    // For non-admins: show only their 4 preferred subjects (if set) + compulsory English
+    // For non-admins: show only their 4 preferred subjects (if set) 
+    // BUT in Standard Mode, we now show ALL subjects so they can pick their 4 on the fly.
     const subjects = useMemo(() => {
-        if (isAdmin || !user?.preferredSubjects?.length) return allSubjectsFromPapers;
+        // If in standard mode and not admin, we still want to see ALL subjects so we can toggle them
+        if (isAdmin || !user?.preferredSubjects?.length || practiceMode === 'standard') return allSubjectsFromPapers;
 
         const preferredKeys = user.preferredSubjects.map(s => getSubjectKey(s)).filter(Boolean);
 
@@ -75,7 +77,7 @@ const Quizzes: React.FC = () => {
 
             return paperKey === 'english' || preferredKeys.includes(paperKey);
         });
-    }, [allSubjectsFromPapers, isAdmin, user?.preferredSubjects]);
+    }, [allSubjectsFromPapers, isAdmin, user?.preferredSubjects, practiceMode]);
 
     const missingSubjects = useMemo(() => {
         if (isAdmin || !user?.preferredSubjects?.length) return [];
@@ -91,12 +93,41 @@ const Quizzes: React.FC = () => {
         });
     }, [allSubjectsFromPapers, isAdmin, user?.preferredSubjects]);
 
+    // Standard Mode selections (on-page override)
+    const [selectedStandardSubjects, setSelectedStandardSubjects] = useState<string[]>([]);
+
     // Standard Mode: per-subject year and count selection
     type StandardSelection = { year: 'random' | number; count: number };
     const [standardSelections, setStandardSelections] = useState<Record<string, StandardSelection>>({});
 
     // Fetch full available years via public API to show "Locked" placeholders
     const [publicSubjectMeta, setPublicSubjectMeta] = useState<any[]>([]);
+
+    useEffect(() => {
+        if (allSubjectsFromPapers.length > 0 && selectedStandardSubjects.length === 0) {
+            // Initializing: 
+            // 1. If user has preferences, use those
+            // 2. Otherwise, find English and pick 3 other subjects
+            let initial: string[] = [];
+            
+            if (user?.preferredSubjects?.length) {
+                const preferenceKeys = user.preferredSubjects.map(s => getSubjectKey(s));
+                initial = allSubjectsFromPapers.filter(s => {
+                    const key = getSubjectKey(s);
+                    return key === 'english' || preferenceKeys.includes(key);
+                });
+            } else {
+                const english = allSubjectsFromPapers.find(s => ['english', 'english language', 'use of english'].includes(s.toLowerCase()));
+                if (english) {
+                    initial.push(english);
+                    const others = allSubjectsFromPapers.filter(s => s !== english).slice(0, 3);
+                    initial.push(...others);
+                }
+            }
+            setSelectedStandardSubjects(initial);
+        }
+    }, [allSubjectsFromPapers, user?.preferredSubjects]);
+
     useEffect(() => {
         const fetchPublicMeta = async () => {
             try {
@@ -159,16 +190,23 @@ const Quizzes: React.FC = () => {
     }, [subjects, yearsBySubject, user]);
 
 
-    const [adminStandardSelections, setAdminStandardSelections] = useState<string[]>([]);
+    // Helper to toggle a subject in Standard Mode
+    const toggleStandardSubject = (subject: string) => {
+        const isEnglish = ['english', 'english language', 'use of english'].includes(subject.toLowerCase());
+        if (isEnglish) return; // Cannot uncheck English
 
-    useEffect(() => {
-        if (subjects.length > 0 && adminStandardSelections.length === 0) {
-            const english = subjects.find(s => ['english', 'english language', 'use of english'].includes(s.toLowerCase()));
-            if (english) {
-                setAdminStandardSelections([english]);
+        setSelectedStandardSubjects(prev => {
+            if (prev.includes(subject)) {
+                return prev.filter(s => s !== subject);
+            } else {
+                if (prev.length >= 4) {
+                    alert("You can only select exactly 4 subjects for a Standard UTME exam.");
+                    return prev;
+                }
+                return [...prev, subject];
             }
-        }
-    }, [subjects]);
+        });
+    };
 
     // State for Custom Mode
     // Updated structure: Year AND Count per subject
@@ -221,7 +259,7 @@ const Quizzes: React.FC = () => {
     const [examMode, setExamMode] = useState<'study' | 'practice' | 'mock'>('practice');
 
     const handleStartStandardExam = () => {
-        const activeSubjects = isAdmin ? subjects.filter(s => adminStandardSelections.includes(s)) : subjects;
+        const activeSubjects = subjects.filter(s => selectedStandardSubjects.includes(s));
 
         const selections = activeSubjects.map(subject => ({
             subject,
@@ -413,7 +451,7 @@ const Quizzes: React.FC = () => {
                                 Your 4 UTME subjects are shown below. Each can use a different year — great when not all subjects have the same paper year.
                             </p>
 
-                            {subjects.length < 4 ? (
+                            {hasFetched && !isLoading && subjects.length < 4 ? (
                                 <div className="p-4 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-xl text-orange-700 dark:text-orange-300 text-sm">
                                     {missingSubjects.length > 0 ? (
                                         <>
@@ -432,40 +470,32 @@ const Quizzes: React.FC = () => {
                                     {subjects.map(subject => {
                                         const subjectYears = getYearsForSubject(subject);
                                         const currentYear = standardSelections[subject]?.year ?? 'random';
-                                        const isCompulsory = subject === 'English' || subject === 'English Language';
-                                        const isSelectedByAdmin = adminStandardSelections.includes(subject);
+                                        const isCompulsory = ['english', 'english language', 'use of english'].includes(subject.toLowerCase());
+                                        const isSelected = selectedStandardSubjects.includes(subject);
 
                                         return (
-                                            <div key={subject} className={`flex items-center justify-between gap-3 sm:gap-4 p-3 sm:p-4 rounded-lg border-2 transition-all ${isAdmin && isSelectedByAdmin ? 'border-primary bg-primary/5 dark:bg-primary/10' :
-                                                isAdmin && !isSelectedByAdmin ? 'border-slate-200 dark:border-slate-700 bg-white/50 dark:bg-slate-800/30 opacity-60' :
-                                                    isCompulsory ? 'border-primary/50 bg-primary/5 dark:bg-primary/10' :
-                                                        'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/50'
+                                            <div key={subject} className={`flex items-center justify-between gap-3 sm:gap-4 p-3 sm:p-4 rounded-lg border-2 transition-all ${isSelected ? 'border-primary bg-primary/5 dark:bg-primary/10' :
+                                                'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/30 opacity-60'
                                                 }`}>
-                                                <label className={`flex items-center gap-3 min-w-0 pr-4 ${isAdmin ? 'cursor-pointer' : ''}`}>
-                                                    {isAdmin && (
-                                                        <input
-                                                            type="checkbox"
-                                                            checked={isSelectedByAdmin}
-                                                            onChange={(e) => {
-                                                                if (e.target.checked) {
-                                                                    if (adminStandardSelections.length >= 4) {
-                                                                        alert("You can only select up to 4 subjects for Standard Practice.");
-                                                                        return;
-                                                                    }
-                                                                    setAdminStandardSelections([...adminStandardSelections, subject]);
-                                                                } else {
-                                                                    setAdminStandardSelections(adminStandardSelections.filter(s => s !== subject));
-                                                                }
-                                                            }}
-                                                            className="h-5 w-5 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer shrink-0"
-                                                        />
-                                                    )}
-                                                    {isCompulsory && !isAdmin && (
-                                                        <span className="text-[10px] uppercase font-bold text-primary bg-primary/10 px-2 py-0.5 rounded shrink-0">Compulsory</span>
-                                                    )}
-                                                    <span className={`font-semibold text-slate-800 dark:text-white truncate ${isAdmin ? 'select-none' : ''}`}>{subject}</span>
+                                                <label className="flex items-center gap-3 min-w-0 pr-4 cursor-pointer">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={isSelected}
+                                                        onChange={() => toggleStandardSubject(subject)}
+                                                        disabled={isCompulsory}
+                                                        className={`w-4 h-4 rounded border-slate-300 text-primary focus:ring-primary ${isCompulsory ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                                                    />
+                                                    <div className="flex flex-col min-w-0">
+                                                        <span className="font-bold text-slate-800 dark:text-slate-200 truncate text-sm sm:text-base">
+                                                            {subject}
+                                                        </span>
+                                                        {isCompulsory && (
+                                                            <span className="text-[10px] text-primary font-medium">Compulsory</span>
+                                                        )}
+                                                    </div>
                                                 </label>
-                                                {(!isAdmin || isSelectedByAdmin) && (
+
+                                                {isSelected && (
                                                     <div className="flex items-center gap-3 shrink-0">
                                                         <div className="flex flex-col">
                                                             <label className="text-[10px] uppercase text-gray-500 font-bold mb-1">Year</label>
@@ -517,7 +547,7 @@ const Quizzes: React.FC = () => {
                             <div className="flex justify-end mt-6">
                                 <button
                                     onClick={handleStartStandardExam}
-                                    disabled={isAdmin ? adminStandardSelections.length !== 4 : subjects.length !== 4}
+                                    disabled={selectedStandardSubjects.length !== 4}
                                     className="bg-primary text-white font-bold py-3 px-8 rounded-lg hover:bg-green-700 transition-colors duration-200 disabled:bg-gray-400 disabled:cursor-not-allowed"
                                 >
                                     Get Started
