@@ -63,11 +63,11 @@ const Quizzes: React.FC = () => {
     const isPro = user?.subscription === 'pro' || isAdmin;
     const allSubjectsFromPapers = useMemo(() => [...new Set(allPapers.map(p => p.subject))].sort(), [allPapers]);
 
-    // For non-admins: show only their 4 preferred subjects (if set) 
-    // BUT in Standard Mode, we now show ALL subjects so they can pick their 4 on the fly.
+    // TIER-BASED SUBJECT LIST:
+    // 1. Admins and Guests (no user) see ALL subjects so they can pick their 4 on the fly.
+    // 2. Logged-in Students see ONLY their 4 preferred subjects (plus English).
     const subjects = useMemo(() => {
-        // If in standard mode and not admin, we still want to see ALL subjects so we can toggle them
-        if (isAdmin || !user?.preferredSubjects?.length || practiceMode === 'standard') return allSubjectsFromPapers;
+        if (isAdmin || !user) return allSubjectsFromPapers;
 
         const preferredKeys = user.preferredSubjects.map(s => getSubjectKey(s)).filter(Boolean);
 
@@ -77,7 +77,7 @@ const Quizzes: React.FC = () => {
 
             return paperKey === 'english' || preferredKeys.includes(paperKey);
         });
-    }, [allSubjectsFromPapers, isAdmin, user?.preferredSubjects, practiceMode]);
+    }, [allSubjectsFromPapers, isAdmin, user, practiceMode]);
 
     const missingSubjects = useMemo(() => {
         if (isAdmin || !user?.preferredSubjects?.length) return [];
@@ -106,27 +106,31 @@ const Quizzes: React.FC = () => {
     useEffect(() => {
         if (allSubjectsFromPapers.length > 0 && selectedStandardSubjects.length === 0) {
             // Initializing: 
-            // 1. If user has preferences, use those
-            // 2. Otherwise, find English and pick 3 other subjects
+            // 1. If user is a student, use their 4 profile subjects
+            // 2. If guest/admin, find English and pick 3 other available subjects
             let initial: string[] = [];
             
-            if (user?.preferredSubjects?.length) {
+            if (user && !isAdmin) {
+                // Student: Fixed to profile
                 const preferenceKeys = user.preferredSubjects.map(s => getSubjectKey(s));
                 initial = allSubjectsFromPapers.filter(s => {
                     const key = getSubjectKey(s);
                     return key === 'english' || preferenceKeys.includes(key);
                 });
             } else {
+                // Guest or Admin: Pick English + first 3
                 const english = allSubjectsFromPapers.find(s => ['english', 'english language', 'use of english'].includes(s.toLowerCase()));
                 if (english) {
                     initial.push(english);
                     const others = allSubjectsFromPapers.filter(s => s !== english).slice(0, 3);
                     initial.push(...others);
+                } else {
+                    initial = allSubjectsFromPapers.slice(0, 4);
                 }
             }
             setSelectedStandardSubjects(initial);
         }
-    }, [allSubjectsFromPapers, user?.preferredSubjects]);
+    }, [allSubjectsFromPapers, user, isAdmin]);
 
     useEffect(() => {
         const fetchPublicMeta = async () => {
@@ -278,7 +282,7 @@ const Quizzes: React.FC = () => {
         }
 
         if (selections.length !== 4) {
-            alert('You need exactly 4 preferred subjects to start a Standard Exam. Please update your profile.');
+            alert(user ? 'You need exactly 4 preferred subjects to start a Standard Exam. Please update your profile.' : 'Please select exactly 4 subjects to start a Standard Exam.');
             return;
         }
 
@@ -477,14 +481,16 @@ const Quizzes: React.FC = () => {
                                             <div key={subject} className={`flex items-center justify-between gap-3 sm:gap-4 p-3 sm:p-4 rounded-lg border-2 transition-all ${isSelected ? 'border-primary bg-primary/5 dark:bg-primary/10' :
                                                 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/30 opacity-60'
                                                 }`}>
-                                                <label className="flex items-center gap-3 min-w-0 pr-4 cursor-pointer">
-                                                    <input
-                                                        type="checkbox"
-                                                        checked={isSelected}
-                                                        onChange={() => toggleStandardSubject(subject)}
-                                                        disabled={isCompulsory}
-                                                        className={`w-4 h-4 rounded border-slate-300 text-primary focus:ring-primary ${isCompulsory ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
-                                                    />
+                                                <label className={`flex items-center gap-3 min-w-0 pr-4 ${(isAdmin || !user) ? 'cursor-pointer' : ''}`}>
+                                                    {(isAdmin || !user) && (
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={isSelected}
+                                                            onChange={() => toggleStandardSubject(subject)}
+                                                            disabled={isCompulsory}
+                                                            className={`w-4 h-4 rounded border-slate-300 text-primary focus:ring-primary ${isCompulsory ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                                                        />
+                                                    )}
                                                     <div className="flex flex-col min-w-0">
                                                         <span className="font-bold text-slate-800 dark:text-slate-200 truncate text-sm sm:text-base">
                                                             {subject}
@@ -510,12 +516,12 @@ const Quizzes: React.FC = () => {
                                                                 {subjectYears.map(year => {
                                                                     const isLocked = !isAdmin && (isPro ? year < 2000 : year !== 2024);
                                                                     return (
-                                                                        <option key={year} value={year}>
+                                                                        <option key={year} value={year} disabled={isLocked}>
                                                                             {year} {isLocked ? '🔒 (Pro)' : ''}
                                                                         </option>
                                                                     );
                                                                 })}
-                                                                <option value="random">Random Year</option>
+                                                                {(isAdmin || isPro) && <option value="random">Random Year</option>}
                                                             </select>
                                                         </div>
                                                         <div className="flex flex-col">
@@ -589,7 +595,7 @@ const Quizzes: React.FC = () => {
                                                                 {getYearsForSubject(subject).map(year => {
                                                                     const isLocked = !isAdmin && (isPro ? year < 2000 : year !== 2024);
                                                                     return (
-                                                                        <option key={year} value={year}>
+                                                                        <option key={year} value={year} disabled={isLocked}>
                                                                             {year} {isLocked ? '🔒 (Pro)' : ''}
                                                                         </option>
                                                                     );
