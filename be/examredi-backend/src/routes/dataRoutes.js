@@ -1,3 +1,4 @@
+import express from 'express';
 import { getPapers, getPaperById, getGuides, getTopics, getLeaderboard, addLeaderboardScore, getPerformance, addPerformanceResult, getLiterature, searchPapers, searchByTopic, getQuestionById, getSitemap } from '../controllers/dataController.js';
 import { protect, optionalProtect } from '../middleware/authMiddleware.js';
 
