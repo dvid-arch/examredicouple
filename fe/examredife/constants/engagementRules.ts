@@ -53,8 +53,8 @@ export const evaluateNudgeTrigger = (nudgeId: string, context: TriggerConditions
             // Everyone deserves to support the product they're using
             return context.subscriptionStatus === 'free';
         case 'utme-challenge-100k':
-            // Performance reward: Keep this for the "Victory Lap" top performers
-            return (context.minScore || 0) > 85;
+            // High visibility for the prize incentive to drive upgrades/engagement
+            return context.subscriptionStatus === 'free' || (context.minScore || 0) > 85;
         case 'streak-motivator':
             return (context.minSessions || 0) > 1;
         default:

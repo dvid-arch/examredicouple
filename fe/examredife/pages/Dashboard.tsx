@@ -9,9 +9,10 @@ import { useUserProgress } from '../contexts/UserProgressContext.tsx';
 import VerificationBanner from '../components/VerificationBanner.tsx';
 import { DashboardSkeleton } from '../components/Skeletons.tsx';
 import { usePastQuestions } from '../contexts/PastQuestionsContext.tsx';
-import { StudyGuide } from '../types.ts';
+import { StudyGuide, LeaderboardScore } from '../types.ts';
 import OnboardingSubjectModal from '../components/OnboardingSubjectModal.tsx';
 import { useReturningUser } from '../hooks/useReturningUser.ts';
+import apiService from '../services/apiService.ts';
 
 // FIX: Changed icon components to accept props to allow className to be passed via React.cloneElement.
 const PracticeIcon = (props: React.ComponentProps<"svg">) => <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" {...props}><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>;
@@ -140,6 +141,76 @@ const WelcomeBanner = () => {
                 </div>
             </div>
         </div>
+    );
+};
+
+const LeaderboardTeaser = () => {
+    const { user } = useAuth();
+    const [leaderboard, setLeaderboard] = useState<LeaderboardScore[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchTeaserData = async () => {
+            try {
+                const data = await apiService<LeaderboardScore[]>('/data/leaderboard');
+                // Sort by estimated score
+                const sorted = [...data].sort((a,b) => (b.estimatedScore || 0) - (a.estimatedScore || 0));
+                setLeaderboard(sorted.slice(0, 3));
+            } catch (error) {
+                console.error("Failed to fetch leaderboard teaser", error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+        fetchTeaserData();
+    }, []);
+
+    if (isLoading) return null;
+
+    return (
+        <section className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+            <div className="p-5 sm:p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b dark:border-slate-800">
+                <div>
+                    <h2 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                        National Rankings 🏆
+                        <span className="bg-yellow-400 text-yellow-900 text-[10px] px-2 py-0.5 rounded-full font-black uppercase tracking-wider">Prizes Available</span>
+                    </h2>
+                    <p className="text-sm text-slate-500 font-medium">Top students in Nigeria this month</p>
+                </div>
+                <Link to="/challenge" className="text-primary font-bold text-sm bg-primary/5 hover:bg-primary/10 px-4 py-2 rounded-xl transition-all flex items-center gap-1 group">
+                    See Full Leaderboard <span className="group-hover:translate-x-1 transition-transform">→</span>
+                </Link>
+            </div>
+
+            <div className="p-4 sm:p-6 grid grid-cols-1 sm:grid-cols-3 gap-4">
+                {leaderboard.map((entry, index) => {
+                    const isCurrentUser = entry.name === user?.name;
+                    const rankEmoji = index === 0 ? '🥇' : index === 1 ? '🥈' : '🥉';
+                    
+                    return (
+                        <div key={index} className={`flex items-center justify-between p-3 rounded-xl border ${isCurrentUser ? 'border-primary bg-primary/5' : 'border-slate-50 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30'}`}>
+                            <div className="flex items-center gap-3 overflow-hidden">
+                                <span className="text-xl">{rankEmoji}</span>
+                                <div className="min-w-0">
+                                    <p className={`font-bold text-sm truncate ${isCurrentUser ? 'text-primary' : 'text-slate-800 dark:text-slate-200'}`}>{entry.name}</p>
+                                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tight">Est. {Math.round(entry.estimatedScore || 0)}</p>
+                                </div>
+                            </div>
+                            {isCurrentUser && <span className="text-[9px] font-black text-primary bg-white px-1.5 py-0.5 rounded border border-primary/20">YOU</span>}
+                        </div>
+                    );
+                })}
+            </div>
+            
+            {user?.subscription === 'free' && (
+                <div className="bg-indigo-600 p-3 sm:p-4 text-center">
+                    <p className="text-white text-xs sm:text-sm font-bold flex flex-wrap items-center justify-center gap-2">
+                        <span>Win Cash Prizes & More!</span>
+                        <Link to="/challenge" className="bg-white text-indigo-600 px-3 py-1 rounded-lg text-[10px] uppercase font-black hover:scale-105 transition-transform shadow-lg">View Rewards</Link>
+                    </p>
+                </div>
+            )}
+        </section>
     );
 };
 
@@ -296,6 +367,8 @@ const Dashboard: React.FC = () => {
             {showTour && <OnboardingTour steps={tourSteps} onComplete={handleTourComplete} />}
             <VerificationBanner />
             <WelcomeBanner />
+
+            <LeaderboardTeaser />
 
             {/* Weak Areas Widget */}
             {isAuthenticated && weakAreas.length > 0 && (
