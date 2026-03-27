@@ -4,6 +4,7 @@ import crypto from 'crypto';
 import { fileURLToPath } from 'url';
 import Paper from '../models/Paper.js';
 import Leaderboard from '../models/Leaderboard.js';
+import User from '../models/User.js';
 import Performance from '../models/Performance.js';
 import Guide from '../models/Guide.js';
 
@@ -265,6 +266,8 @@ export const getQuestionById = async (req, res) => {
         const question = paper.questions.find(q => q.id === id);
 
         const isPro = req.user?.subscription === 'pro' || req.user?.role === 'admin';
+        const isAdmin = req.user?.role === 'admin';
+        const userLicenseYear = req.user?.licenseYear || new Date().getFullYear();
 
         // Add paper metadata for context
         const result = {
@@ -418,7 +421,24 @@ export const getGuides = async (req, res) => {
 // @route   GET /api/data/leaderboard
 export const getLeaderboard = async (req, res) => {
     try {
-        const leaderboard = await Leaderboard.find().sort({ score: -1, date: -1 }).limit(20);
+        // Query users directly to ensure data is fresh and deletions are reflected.
+        // We filter for users with names and an estimatedScore (base is 150, but we'll show anything > 0).
+        const users = await User.find({ 
+            name: { $exists: true, $ne: "" },
+            estimatedScore: { $gt: 0 }
+        })
+        .select('name estimatedScore photoURL subscription')
+        .sort({ estimatedScore: -1 })
+        .limit(50);
+
+        // Map to the format expected by the frontend (Rankings)
+        const leaderboard = users.map(u => ({
+            name: u.name,
+            estimatedScore: u.estimatedScore || 150,
+            photoURL: u.photoURL,
+            isVerified: u.subscription === 'pro'
+        }));
+
         res.json(leaderboard);
     } catch (error) {
         console.error('Error fetching leaderboard:', error);
@@ -459,7 +479,23 @@ export const addLeaderboardScore = async (req, res) => {
         });
 
         await newScore.save();
-        const leaderboard = await Leaderboard.find().sort({ score: -1, date: -1 }).limit(20);
+
+        // Return the refactored leaderboard even on submission for consistency
+        const users = await User.find({ 
+            name: { $exists: true, $ne: "" },
+            estimatedScore: { $gt: 0 }
+        })
+        .select('name estimatedScore photoURL subscription')
+        .sort({ estimatedScore: -1 })
+        .limit(50);
+
+        const leaderboard = users.map(u => ({
+            name: u.name,
+            estimatedScore: u.estimatedScore || 150,
+            photoURL: u.photoURL,
+            isVerified: u.subscription === 'pro'
+        }));
+
         res.status(201).json(leaderboard);
     } catch (error) {
         console.error('Error adding leaderboard score:', error);
