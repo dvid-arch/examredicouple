@@ -31,7 +31,7 @@ const UpgradeModal: React.FC<UpgradeModalProps> = ({ isOpen, onClose, request })
     if (!isOpen) return null;
 
     const handleUpgrade = () => {
-        const phoneNumber = "2348123456789"; // Replace with your actual WhatsApp number
+        const phoneNumber = "2349031608725"; // Updated WhatsApp number
         const selectedPlanName = 'Lifetime Access (₦2,000)';
         const message = `Hi ExamRedi, I would like to upgrade my account to the ${selectedPlanName}. My email is ${user?.email || 'not provided'}.`;
         const encodedMessage = encodeURIComponent(message);

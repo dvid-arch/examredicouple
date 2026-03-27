@@ -166,7 +166,7 @@ const Profile: React.FC = () => {
             return;
         }
 
-        const phoneNumber = "2348123456789"; // Matching UpgradeModal.tsx
+        const phoneNumber = "2349031608725"; // Matching UpgradeModal.tsx
         const message = `Hi ExamRedi, I would like to withdraw my referral balance of ₦${balance.toLocaleString()}. \n\nName: ${user.name}\nEmail: ${user.email}`;
         const encodedMessage = encodeURIComponent(message);
         window.open(`https://wa.me/${phoneNumber}?text=${encodedMessage}`, '_blank');
