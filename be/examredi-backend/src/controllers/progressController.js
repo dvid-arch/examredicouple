@@ -144,7 +144,7 @@ export const updateProgress = async (req, res) => {
 // @route   POST /api/user/progress/engagement/dismiss
 export const dismissNudge = async (req, res) => {
     try {
-        const { nudgeId } = req.body;
+        const { nudgeId, estimatedScore } = req.body;
         const user = await User.findById(req.user.id);
 
         if (!user) {
@@ -166,6 +166,10 @@ export const dismissNudge = async (req, res) => {
         const RECURRING_NUDGES = ['pro-success-stat'];
         if (!RECURRING_NUDGES.includes(nudgeId) && !user.engagement.dismissedNudges.includes(nudgeId)) {
             user.engagement.dismissedNudges.push(nudgeId);
+        }
+
+        if (estimatedScore) {
+            user.estimatedScore = estimatedScore;
         }
 
         user.markModified('engagement.nudgeDismissalTimes');

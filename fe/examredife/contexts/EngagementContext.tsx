@@ -17,7 +17,7 @@ const COOLDOWN_MS = 12 * 60 * 60 * 1000; // 12 hours
 
 export const EngagementProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const { isAuthenticated } = useAuth();
-    const { engagement, updateEngagementState } = useUserProgress();
+    const { engagement, updateEngagementState, estimatedScore: currentScore } = useUserProgress();
     const [activeNudge, setActiveNudge] = useState<EngagementNudge | null>(null);
 
     // Server-side cooldown check using nudgeDismissalTimes returned by backend
@@ -74,11 +74,12 @@ export const EngagementProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
         setActiveNudge(null);
 
+        let updatedScoreValue: number | undefined;
         if (!isRecurring) {
             // Optimistically update local state for permanent dismissals
             const currentDismissed = engagement?.dismissedNudges || [];
             if (!currentDismissed.includes(nudgeId)) {
-                updateEngagementState({
+                updatedScoreValue = updateEngagementState({
                     ...engagement,
                     dismissedNudges: [...currentDismissed, nudgeId]
                 });
@@ -86,7 +87,7 @@ export const EngagementProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         } else {
             // Optimistically update local state for recurring dismissals to prevent loops
             const currentTimes = engagement?.nudgeDismissalTimes || {};
-            updateEngagementState({
+            updatedScoreValue = updateEngagementState({
                 ...engagement,
                 nudgeDismissalTimes: {
                     ...currentTimes,
@@ -100,7 +101,10 @@ export const EngagementProvider: React.FC<{ children: React.ReactNode }> = ({ ch
             try {
                 await apiService('/user/progress/engagement/dismiss', {
                     method: 'POST',
-                    body: { nudgeId }
+                    body: { 
+                        nudgeId, 
+                        estimatedScore: updatedScoreValue 
+                    }
                 });
             } catch (error) {
                 console.error("Failed to sync nudge dismissal to backend:", error);

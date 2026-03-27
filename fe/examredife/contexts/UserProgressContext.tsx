@@ -26,7 +26,7 @@ interface UserProgressContextType {
     studyProgress: { [key: string]: { confidence: ConfidenceLevel, lastReviewed: string, subject?: string } };
     addActivity: (activity: Omit<RecentActivity, 'timestamp'>) => void;
     syncProgress: () => Promise<void>;
-    updateEngagementState: (engagement: { dismissedNudges: string[], unlockedNudges: string[], nudgeDismissalTimes?: Record<string, string> }) => void;
+    updateEngagementState: (engagement: { dismissedNudges: string[], unlockedNudges: string[], nudgeDismissalTimes?: Record<string, string> }) => number;
     updateConfidence: (topicId: string, confidence: ConfidenceLevel, subject?: string) => Promise<void>;
     calculateTopicStatus: (topicId: string) => ConfidenceLevel | 'stale' | null;
     estimatedScore: number;
@@ -46,7 +46,8 @@ export const UserProgressProvider: React.FC<{ children: ReactNode }> = ({ childr
     // Calculate Estimated Score based on progress and activity
     const calculateScore = useCallback((
         progressMap: { [key: string]: { confidence: ConfidenceLevel, lastReviewed?: string, subject?: string } },
-        activities: RecentActivity[]
+        activities: RecentActivity[],
+        engagementData?: { dismissedNudges: string[] }
     ) => {
         const MAX_SCORE = 400;
         const BASE_SCORE = 140;
@@ -139,7 +140,17 @@ export const UserProgressProvider: React.FC<{ children: ReactNode }> = ({ childr
         const scoreRange = MAX_SCORE - BASE_SCORE;
         const calculatedScore = BASE_SCORE + (overallProficiency / 100) * scoreRange;
 
-        return Math.min(Math.round(calculatedScore), MAX_SCORE);
+        // 6. Engagement Bonus (Noticeable Bumps)
+        // This rewarding logic helps users feel progress for "engagement actions"
+        let engagementBonus = 0;
+        if (engagementData && engagementData.dismissedNudges) {
+            const uniqueActions = engagementData.dismissedNudges.length;
+            if (uniqueActions >= 1) engagementBonus += 10; // First action: +10
+            if (uniqueActions >= 2) engagementBonus += 5;  // Second action: +5
+            if (uniqueActions >= 3) engagementBonus += 5;  // Third action: +5 (Total Max +20)
+        }
+
+        return Math.min(Math.round(calculatedScore + engagementBonus), MAX_SCORE);
     }, [user?.preferredSubjects]);
 
     const loadFromLocal = useCallback(() => {
@@ -176,8 +187,9 @@ export const UserProgressProvider: React.FC<{ children: ReactNode }> = ({ childr
         if (savedStudyProgress) {
             try {
                 const parsed = JSON.parse(savedStudyProgress);
+                const parsedEngagement = savedEngagement ? JSON.parse(savedEngagement) : { dismissedNudges: [] };
                 setStudyProgress(parsed);
-                setEstimatedScore(calculateScore(parsed, parsedActivity));
+                setEstimatedScore(calculateScore(parsed, parsedActivity, parsedEngagement));
             } catch (e) {
                 setStudyProgress({});
             }
@@ -206,7 +218,7 @@ export const UserProgressProvider: React.FC<{ children: ReactNode }> = ({ childr
                 if (data.studyProgress) {
                     setStudyProgress(data.studyProgress);
                     // If backend return score, use it, else calculate
-                    const score = data.estimatedScore || calculateScore(data.studyProgress, data.recentActivity || []);
+                    const score = data.estimatedScore || calculateScore(data.studyProgress, data.recentActivity || [], data.engagement || engagement);
                     setEstimatedScore(score);
                     localStorage.setItem('examRediStudyProgress', JSON.stringify(data.studyProgress));
                 } else if (data.estimatedScore) {
@@ -252,7 +264,7 @@ export const UserProgressProvider: React.FC<{ children: ReactNode }> = ({ childr
         setRecentActivity(updatedActivity);
 
         // Recalculate Score locally for instant feedback
-        const newScore = calculateScore(studyProgress, updatedActivity);
+        const newScore = calculateScore(studyProgress, updatedActivity, engagement);
         setEstimatedScore(newScore);
 
         if (isAuthenticated) {
@@ -295,7 +307,10 @@ export const UserProgressProvider: React.FC<{ children: ReactNode }> = ({ childr
 
     const updateEngagementState = (newEngagement: { dismissedNudges: string[], unlockedNudges: string[], nudgeDismissalTimes?: Record<string, string> }) => {
         setEngagement(newEngagement);
+        const newScore = calculateScore(studyProgress, recentActivity, newEngagement);
+        setEstimatedScore(newScore);
         localStorage.setItem('examRediEngagement', JSON.stringify(newEngagement));
+        return newScore;
     };
 
     const updateConfidence = async (topicId: string, confidence: ConfidenceLevel, subject?: string) => {
@@ -305,7 +320,7 @@ export const UserProgressProvider: React.FC<{ children: ReactNode }> = ({ childr
             [topicId]: { confidence, lastReviewed: new Date().toISOString(), subject }
         };
         setStudyProgress(newProgress);
-        setEstimatedScore(calculateScore(newProgress, recentActivity));
+        setEstimatedScore(calculateScore(newProgress, recentActivity, engagement));
         localStorage.setItem('examRediStudyProgress', JSON.stringify(newProgress));
 
         if (isAuthenticated) {
@@ -320,7 +335,7 @@ export const UserProgressProvider: React.FC<{ children: ReactNode }> = ({ childr
 
                 if (response && response.studyProgress) {
                     setStudyProgress(response.studyProgress);
-                    setEstimatedScore(calculateScore(response.studyProgress, recentActivity));
+                    setEstimatedScore(calculateScore(response.studyProgress, recentActivity, engagement));
                     localStorage.setItem('examRediStudyProgress', JSON.stringify(response.studyProgress));
                 }
             } catch (error) {
