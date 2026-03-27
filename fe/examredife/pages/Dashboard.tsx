@@ -54,7 +54,7 @@ const DashboardTile: React.FC<{ title: string; description: string; colorClass: 
                     {React.cloneElement(icon, { className: "h-6 w-6" })}
                 </div>
             </div>
-            
+
             <div className="relative z-10 sm:hidden">
                 <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${colorClass} text-white shadow-md`}>
                     {React.cloneElement(icon, { className: "h-5 w-5" })}
@@ -135,8 +135,8 @@ const WelcomeBanner = () => {
                     <Link to="/practice" className="bg-white text-primary text-center font-bold py-3 px-8 rounded-lg hover:bg-blue-50 transition-all duration-200 shadow-sm hover:shadow-md w-full sm:w-auto">
                         Start Practice
                     </Link>
-                    <Link to="/challenge" className="bg-primary-dark/30 text-white text-center border border-white/20 font-semibold py-3 px-8 rounded-lg hover:bg-primary-dark/50 transition-all duration-200 w-full sm:w-auto">
-                        Daily Challenge
+                    <Link to="/question-search" className="bg-primary-dark/30 text-white text-center border border-white/20 font-semibold py-3 px-8 rounded-lg hover:bg-primary-dark/50 transition-all duration-200 w-full sm:w-auto">
+                        See Past Questions
                     </Link>
                 </div>
             </div>
@@ -154,7 +154,7 @@ const LeaderboardTeaser = () => {
             try {
                 const data = await apiService<LeaderboardScore[]>('/data/leaderboard');
                 // Sort by estimated score
-                const sorted = [...data].sort((a,b) => (b.estimatedScore || 0) - (a.estimatedScore || 0));
+                const sorted = [...data].sort((a, b) => (b.estimatedScore || 0) - (a.estimatedScore || 0));
                 setLeaderboard(sorted.slice(0, 3));
             } catch (error) {
                 console.error("Failed to fetch leaderboard teaser", error);
@@ -186,7 +186,7 @@ const LeaderboardTeaser = () => {
                 {leaderboard.map((entry, index) => {
                     const isCurrentUser = entry.name === user?.name;
                     const rankEmoji = index === 0 ? '🥇' : index === 1 ? '🥈' : '🥉';
-                    
+
                     return (
                         <div key={index} className={`flex items-center justify-between p-3 rounded-xl border ${isCurrentUser ? 'border-primary bg-primary/5' : 'border-slate-50 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30'}`}>
                             <div className="flex items-center gap-3 overflow-hidden">
@@ -201,7 +201,7 @@ const LeaderboardTeaser = () => {
                     );
                 })}
             </div>
-            
+
             {user?.subscription === 'free' && (
                 <div className="bg-indigo-600 p-3 sm:p-4 text-center">
                     <p className="text-white text-xs sm:text-sm font-bold flex flex-wrap items-center justify-center gap-2">
