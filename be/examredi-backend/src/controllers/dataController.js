@@ -97,16 +97,23 @@ export const getPapers = async (req, res) => {
         const { subject, year } = req.query;
         const filter = {};
 
-        if (subject) {
-            // Case-insensitive search for subjects to handle URL-lowercase parameters
-            const targetSubject = SUBJECT_MAPPING[subject] || subject;
-            const escapedSubject = subject.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-            const escapedTarget = targetSubject.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        if (subject || req.query.subjects) {
+            // Support both ?subject=Math and ?subjects=Math,English
+            const subjectsToFilter = req.query.subjects 
+                ? req.query.subjects.split(',') 
+                : [subject];
 
-            filter.$or = [
-                { subject: new RegExp('^' + escapedTarget + '$', 'i') },
-                { subject: new RegExp('^' + escapedSubject + '$', 'i') }
-            ];
+            const subjectRegexes = subjectsToFilter.map(sub => {
+                const targetSubject = SUBJECT_MAPPING[sub] || sub;
+                const escapedSubject = sub.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                const escapedTarget = targetSubject.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                return [
+                    { subject: new RegExp('^' + escapedTarget + '$', 'i') },
+                    { subject: new RegExp('^' + escapedSubject + '$', 'i') }
+                ];
+            }).flat();
+
+            filter.$or = subjectRegexes;
         }
 
         if (year) {
@@ -149,8 +156,14 @@ export const getPapers = async (req, res) => {
 
         console.log(`[DataDebug] Final DB Filter:`, JSON.stringify(filter));
 
-        // Query MongoDB
-        let papers = await Paper.find(filter).lean();
+        const includeQuestions = req.query.full === 'true';
+
+        // Query MongoDB - Exclude questions by default to save bandwidth
+        let query = Paper.find(filter).lean();
+        if (!includeQuestions) {
+            query = query.select('-questions');
+        }
+        let papers = await query.exec();
 
         // Secondary safety: Strip explanations and further limit for non-pro
         if (!isPro) {
@@ -175,6 +188,41 @@ export const getPapers = async (req, res) => {
         res.json(papers);
     } catch (error) {
         console.error('Error fetching papers:', error);
+        res.status(500).json({ message: 'Server Error' });
+    }
+};
+
+// @desc    Get a single paper with questions
+// @route   GET /api/data/papers/:id
+export const getPaperById = async (req, res) => {
+    try {
+        const paper = await Paper.findOne({ id: req.params.id }).lean();
+        if (!paper) {
+            return res.status(404).json({ message: 'Paper not found' });
+        }
+
+        const isPro = req.user?.subscription === 'pro' || req.user?.role === 'admin';
+        
+        // Apply same restrictions as getPapers
+        if (!isPro) {
+            if (paper.year !== 2024) {
+                 return res.status(403).json({
+                    message: `Year ${paper.year} is an ExamRedi Pro feature.`,
+                    isLocked: true
+                });
+            }
+            paper.isLimited = true;
+            paper.questions = (paper.questions || []).map(q => {
+                const { explanation, ...rest } = q;
+                return rest;
+            });
+            // Guest check is harder here without more session context, 
+            // but we assume authenticated if we reached here via standard routes.
+        }
+
+        res.json(paper);
+    } catch (error) {
+        console.error('Error fetching paper by ID:', error);
         res.status(500).json({ message: 'Server Error' });
     }
 };

@@ -8,6 +8,7 @@ import { useAuth } from '../contexts/AuthContext.tsx';
 import { usePwaInstall } from '../contexts/PwaContext.tsx';
 import { useUserProgress } from '../contexts/UserProgressContext.tsx';
 import { useEngagement } from '../contexts/EngagementContext.tsx';
+import { usePastQuestions } from '../contexts/PastQuestionsContext.tsx';
 import { evaluateNudgeTrigger, NUDGE_REGISTRY } from '../constants/engagementRules.ts';
 import QuizResults from '../components/QuizResults.tsx';
 import { useVisualViewport } from '../hooks/useVisualViewport.ts';
@@ -135,6 +136,7 @@ const TakeExamination: React.FC = () => {
     const [topicBreakdown, setTopicBreakdown] = useState<Record<string, { correct: number, total: number }>>({});
 
     const { activeNudge, triggerNudge } = useEngagement();
+    const { papers: metadataPapers, fetchFullPaper, fetchPapers } = usePastQuestions();
 
     const sessionId = useMemo(() => {
         if (location.state?.isRetake) return Date.now().toString();
@@ -433,34 +435,53 @@ const TakeExamination: React.FC = () => {
                 preparedQuestions = customQuestions;
             } else {
                 try {
-                    // Try to fetch from API first
-                    let papers: PastPaper[] = [];
-                    try {
-                        const apiData = await apiService<PastPaper[]>('/data/papers');
-                        papers = apiData;
-                    } catch (e) {
-                        console.error("Failed to fetch papers in TakeExamination", e);
-                        papers = [];
+                    // 1. Ensure we have metadata papers to work with
+                    let currentMetadata = metadataPapers;
+                    if (currentMetadata.length === 0) {
+                        const subjectsToFetch = (location.state as any)?.subjects || (location.state as any)?.selections?.map((s: any) => s.subject);
+                        currentMetadata = await fetchPapers(subjectsToFetch);
                     }
 
+                    // 2. Identify required practice selections
                     const numQuestions = questionsPerSubject;
                     let practiceSelections: { subject: string, year: 'random' | number, count?: number }[] = [];
 
                     if (selections) {
                         practiceSelections = selections;
                     } else if (practiceSubjectsFromState && practiceSubjectsFromState.length > 0) {
-                        // Standard Mode: 4 subjects, default to 60 for English, 40 for others? 
-                        // Or just use the global default passed in (likely 40 or 50)
                         practiceSelections = practiceSubjectsFromState.map((subject: string) => ({
                             subject,
                             year: practiceYear || 'random',
-                            count: subject === 'English' ? 60 : 40 // Default standard exam distribution if not specified
+                            count: subject === 'English' ? 60 : 40
                         }));
                     }
 
                     if (practiceSelections.length > 0) {
-                        // Pass undefined for numQuestions to select ALL
-                        preparedQuestions = preparePracticeQuestions(papers, practiceSelections, numQuestions || 9999, (location.state as any)?.query);
+                        // 3. Fetch full paper data for each selection
+                        const fullPapers: PastPaper[] = [];
+                        
+                        await Promise.all(practiceSelections.map(async (sel) => {
+                            let targetId: string | undefined;
+                            
+                            if (sel.year === 'random') {
+                                // Pick a random paper ID for this subject from metadata
+                                const possiblePapers = currentMetadata.filter(p => p.subject === sel.subject);
+                                if (possiblePapers.length > 0) {
+                                    targetId = possiblePapers[Math.floor(Math.random() * possiblePapers.length)].id;
+                                }
+                            } else {
+                                targetId = currentMetadata.find(p => p.subject === sel.subject && p.year === sel.year)?.id;
+                            }
+
+                            if (targetId) {
+                                const fullPaper = await fetchFullPaper(targetId);
+                                if (fullPaper) fullPapers.push(fullPaper);
+                            }
+                        }));
+
+                        if (fullPapers.length > 0) {
+                            preparedQuestions = preparePracticeQuestions(fullPapers, practiceSelections, numQuestions || 9999, (location.state as any)?.query);
+                        }
                     }
                 } catch (error) {
                     console.error("Failed to prepare questions:", error);

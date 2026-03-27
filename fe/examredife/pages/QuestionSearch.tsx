@@ -47,7 +47,7 @@ const QuestionSearch: React.FC = () => {
         title: "Question Search",
         description: "Find specific past questions and answers instantly on ExamRedi."
     });
-    const { papers: allPapers, guides: allGuides, isLoading, fetchPapers, fetchGuides } = usePastQuestions();
+    const { papers: allPapers, guides: allGuides, isLoading, fetchPapers, fetchFullPaper, fetchGuides } = usePastQuestions();
 
     // UI State
     const [isFilterSidebarOpen, setIsFilterSidebarOpen] = useState(false);
@@ -178,6 +178,16 @@ const QuestionSearch: React.FC = () => {
             performSearch(initialQuery);
         }
     }, [location.state, performSearch, allPapers]);
+
+    // Fetch full paper questions when expanded in Library view
+    useEffect(() => {
+        if (expandedPaperId) {
+            const paper = allPapers.find(p => p.id === expandedPaperId);
+            if (paper && (!paper.questions || paper.questions.length === 0)) {
+                fetchFullPaper(expandedPaperId);
+            }
+        }
+    }, [expandedPaperId, allPapers, fetchFullPaper]);
 
     const subjects = useMemo(() => {
         return ['all', ...allowedSubjectsList].sort();

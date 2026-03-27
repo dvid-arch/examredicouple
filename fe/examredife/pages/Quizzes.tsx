@@ -20,7 +20,7 @@ const Quizzes: React.FC = () => {
         description: "Interactive practice tests and past questions for ExamRedi."
     });
 
-    const { papers: allPapers, isLoading, fetchPapers } = usePastQuestions();
+    const { papers: allPapers, isLoading, fetchPapers, prefetchPapers } = usePastQuestions();
 
     // Prepare Schema Data
     const quizSchemaData = useMemo(() => ({
@@ -43,8 +43,21 @@ const Quizzes: React.FC = () => {
     }, [tab]);
 
     useEffect(() => {
-        fetchPapers();
-    }, [fetchPapers]);
+        // Fetch only preferred subjects (plus English) to be efficient
+        const subjectsToFetch = user?.preferredSubjects && user.preferredSubjects.length > 0 
+            ? [...new Set([...user.preferredSubjects, 'English'])]
+            : undefined;
+
+        fetchPapers(subjectsToFetch).then(() => {
+            // Background prefetch for current year (most likely selection)
+            if (subjectsToFetch) {
+                // Wait 3 seconds to ensure UI interactivity is smooth first
+                setTimeout(() => {
+                    prefetchPapers(subjectsToFetch, 2024);
+                }, 3000);
+            }
+        });
+    }, [fetchPapers, prefetchPapers, user?.preferredSubjects]);
 
     const isAdmin = user?.role === 'admin';
     const isPro = user?.subscription === 'pro' || isAdmin;

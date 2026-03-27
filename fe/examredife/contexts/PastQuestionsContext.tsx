@@ -13,7 +13,9 @@ interface PastQuestionsContextType {
     papers: PastPaper[];
     guides: StudyGuide[];
     isLoading: boolean;
-    fetchPapers: (forceRefresh?: boolean) => Promise<PastPaper[]>;
+    fetchPapers: (subjects?: string[], forceRefresh?: boolean) => Promise<PastPaper[]>;
+    fetchFullPaper: (paperId: string) => Promise<PastPaper | null>;
+    prefetchPapers: (subjects: string[], year?: number) => Promise<void>;
     fetchGuides: (forceRefresh?: boolean) => Promise<StudyGuide[]>;
 }
 
@@ -30,48 +32,139 @@ export const PastQuestionsProvider: React.FC<{ children: ReactNode }> = ({ child
     const papersRef = useRef<PastPaper[]>([]);
     const guidesRef = useRef<StudyGuide[]>([]);
 
-    const fetchPapers = useCallback(async (forceRefresh = false) => {
-        // 1. In-memory cache hit (same session, no reload needed)
-        if (!forceRefresh && hasFetchedPapersRef.current) {
+    const fetchPapers = useCallback(async (subjects?: string[], forceRefresh = false) => {
+        // Construct a unique cache key if filtered by subjects
+        const subjectsKey = subjects && subjects.length > 0 ? `_${subjects.sort().join(',')}` : '';
+        const currentCacheKey = `${CACHE_KEY_PAPERS}${subjectsKey}`;
+
+        // 1. In-memory cache hit
+        if (!forceRefresh && hasFetchedPapersRef.current && subjectsKey === '') {
             return papersRef.current;
         }
 
-        // 2. IndexedDB cache hit (persists across page reloads, 24h TTL)
+        // 2. IndexedDB cache hit
         if (!forceRefresh) {
-            const cached = await getCache<PastPaper[]>(CACHE_KEY_PAPERS);
+            const cached = await getCache<PastPaper[]>(currentCacheKey);
             if (cached && cached.length > 0) {
-                console.log(`[Cache] Loaded ${cached.length} papers from IndexedDB`);
-                setPapers(cached);
-                papersRef.current = cached;
-                hasFetchedPapersRef.current = true;
+                console.log(`[Cache] Loaded ${cached.length} papers from IndexedDB (${currentCacheKey})`);
+                if (subjectsKey === '') {
+                    setPapers(cached);
+                    papersRef.current = cached;
+                    hasFetchedPapersRef.current = true;
+                }
                 return cached;
             }
         }
 
-        // 3. Network fetch (first load or forced refresh)
+        // 3. Network fetch
         setIsLoading(true);
         try {
-            console.log('[Cache] Fetching papers from network...');
-            const data = await apiService<PastPaper[]>('/data/papers');
-            console.log(`[Cache] Received ${data?.length || 0} papers from network`);
-            setPapers(data);
-            papersRef.current = data;
-            hasFetchedPapersRef.current = true;
+            let url = '/data/papers';
+            if (subjects && subjects.length > 0) {
+                url += `?subjects=${subjects.join(',')}`;
+            }
 
-            // Persist to IndexedDB for future loads
-            await setCache(CACHE_KEY_PAPERS, data);
-            console.log(`[Cache] Persisted ${data.length} papers to IndexedDB`);
+            console.log(`[Cache] Fetching papers from network: ${url}`);
+            const data = await apiService<PastPaper[]>(url);
+            
+            if (subjectsKey === '') {
+                setPapers(data);
+                papersRef.current = data;
+                hasFetchedPapersRef.current = true;
+            }
 
+            // Persist to IndexedDB
+            await setCache(currentCacheKey, data);
             return data;
         } catch (error) {
             console.error("Failed to fetch papers:", error);
-            // Mark as fetched even on error to prevent infinite retry loops in the same session
-            hasFetchedPapersRef.current = true;
+            if (subjectsKey === '') hasFetchedPapersRef.current = true;
             return [];
         } finally {
             setIsLoading(false);
         }
     }, []);
+
+    // Track ongoing paper requests to prevent duplicate network calls (clashes)
+    const activeRequestsRef = useRef<Map<string, Promise<PastPaper | null>>>(new Map());
+
+    const fetchFullPaper = useCallback(async (paperId: string, retries = 2): Promise<PastPaper | null> => {
+        const cacheKey = `paper_full_${paperId}`;
+        
+        // 1. If a request for this paper is already in progress, join it
+        if (activeRequestsRef.current.has(paperId)) {
+            console.log(`[Cache] Joining ongoing request for paper: ${paperId}`);
+            return activeRequestsRef.current.get(paperId)!;
+        }
+
+        // 2. Check IndexedDB cache first
+        const cached = await getCache<PastPaper>(cacheKey);
+        if (cached) {
+            console.log(`[Cache] Found full paper ${paperId} in IndexedDB`);
+            setPapers(prev => prev.map(p => p.id === paperId && (!p.questions || p.questions.length === 0) ? cached : p));
+            return cached;
+        }
+
+        // 3. Create a new request promise
+        const requestPromise = (async () => {
+            try {
+                console.log(`[Cache] Fetching full paper ${paperId} from network...`);
+                const paper = await apiService<PastPaper>(`/data/papers/${paperId}`);
+                
+                // Persist to IndexedDB
+                await setCache(cacheKey, paper);
+                
+                setPapers(prev => prev.map(p => p.id === paperId ? paper : p));
+                if (papersRef.current.some(p => p.id === paperId)) {
+                    papersRef.current = papersRef.current.map(p => p.id === paperId ? paper : p);
+                }
+
+                return paper;
+            } catch (error) {
+                if (retries > 0) {
+                    console.warn(`[Retry] Failed to fetch ${paperId}. Retrying in 1s... (${retries} attempts left)`);
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                    // Note: Recurse through the wrapper to maintain tracking/deduplication
+                    activeRequestsRef.current.delete(paperId);
+                    return fetchFullPaper(paperId, retries - 1);
+                }
+                console.error(`[Retry] Failed to fetch full paper ${paperId} after 3 attempts:`, error);
+                return null;
+            } finally {
+                // Ensure we clean up the tracking map when the request is done
+                activeRequestsRef.current.delete(paperId);
+            }
+        })();
+
+        // Track this promise
+        activeRequestsRef.current.set(paperId, requestPromise);
+        return requestPromise;
+    }, []);
+
+    const prefetchPapers = useCallback(async (subjects: string[], year?: number) => {
+        // Filter available metadata to find IDs
+        const targets = papersRef.current.filter(p => 
+            subjects.includes(p.subject) && (year ? p.year === year : true)
+        );
+
+        if (targets.length === 0) return;
+
+        console.log(`[Prefetch] Proactively downloading ${targets.length} papers in background...`);
+
+        // Process with a heavy delay between them so we don't hog the network 
+        // while the user is browsing
+        for (const target of targets) {
+            const cacheKey = `paper_full_${target.id}`;
+            const exists = await getCache(cacheKey);
+            
+            if (!exists) {
+                // Wait 2 seconds before each background fetch to stay "polite" to the connection
+                await new Promise(res => setTimeout(res, 2000));
+                console.log(`[Prefetch] Background loading ${target.subject} ${target.year}`);
+                await fetchFullPaper(target.id);
+            }
+        }
+    }, [fetchFullPaper]);
 
     const fetchGuides = useCallback(async (forceRefresh = false) => {
         // 1. In-memory cache hit
@@ -116,7 +209,7 @@ export const PastQuestionsProvider: React.FC<{ children: ReactNode }> = ({ child
     }, []);
 
     return (
-        <PastQuestionsContext.Provider value={{ papers, guides, isLoading, fetchPapers, fetchGuides }}>
+        <PastQuestionsContext.Provider value={{ papers, guides, isLoading, fetchPapers, fetchFullPaper, prefetchPapers, fetchGuides }}>
             {children}
         </PastQuestionsContext.Provider>
     );
