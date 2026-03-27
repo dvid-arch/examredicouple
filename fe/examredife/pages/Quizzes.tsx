@@ -13,14 +13,15 @@ import apiService from '../services/apiService.ts';
 const Quizzes: React.FC = () => {
     const navigate = useNavigate();
     const { tab } = useParams<{ tab: string }>();
-    const { user } = useAuth();
+    const { user, isLoading: authLoading } = useAuth();
 
     useSEO({
         title: "Practice Questions",
         description: "Interactive practice tests and past questions for ExamRedi."
     });
 
-    const { papers: allPapers, isLoading, hasFetched, fetchPapers, prefetchPapers } = usePastQuestions();
+    const { papers: allPapers, isLoading: papersLoading, hasFetched, fetchPapers, prefetchPapers } = usePastQuestions();
+    const isLoading = papersLoading || authLoading;
 
     // Prepare Schema Data
     const quizSchemaData = useMemo(() => ({
@@ -67,16 +68,47 @@ const Quizzes: React.FC = () => {
     // 1. Admins and Guests (no user) see ALL subjects so they can pick their 4 on the fly.
     // 2. Logged-in Students see ONLY their 4 preferred subjects (plus English).
     const subjects = useMemo(() => {
-        if (isAdmin || !user) return allSubjectsFromPapers;
+        const currentUserRole = user?.role;
+        const currentIsAdmin = isAdmin;
+        const subCount = allSubjectsFromPapers.length;
+        
+        console.log('[Filter] RECALC', {
+            email: user?.email,
+            role: currentUserRole,
+            isAdmin: currentIsAdmin,
+            totalAvailable: subCount,
+            practiceMode
+        });
 
-        const preferredKeys = user.preferredSubjects.map(s => getSubjectKey(s)).filter(Boolean);
+        if (currentIsAdmin || !user) {
+            console.log('[Filter] Bypass - Admin/Guest. Return all.');
+            return allSubjectsFromPapers;
+        }
 
-        return allSubjectsFromPapers.filter(s => {
+        // Student / Paid User Path
+        const rawPreferred = user.preferredSubjects || [];
+        
+        // Extract up to 3 non-English preferred subjects, then always enforce English
+        const nonEnglishPreferences = rawPreferred
+            .map(s => getSubjectKey(s))
+            .filter(k => k && k !== 'english')
+            .slice(0, 3) as string[];
+            
+        const preferredKeys = ['english', ...nonEnglishPreferences];
+
+        console.log('[Filter] Student Path', {
+            rawPreferred,
+            preferredKeys
+        });
+
+        const filtered = allSubjectsFromPapers.filter(s => {
             const paperKey = getSubjectKey(s);
             if (!paperKey) return false;
-
-            return paperKey === 'english' || preferredKeys.includes(paperKey);
+            return preferredKeys.includes(paperKey);
         });
+
+        console.log('[Filter] Resulting subjects:', filtered);
+        return filtered;
     }, [allSubjectsFromPapers, isAdmin, user, practiceMode]);
 
     const missingSubjects = useMemo(() => {
@@ -104,33 +136,20 @@ const Quizzes: React.FC = () => {
     const [publicSubjectMeta, setPublicSubjectMeta] = useState<any[]>([]);
 
     useEffect(() => {
-        if (allSubjectsFromPapers.length > 0 && selectedStandardSubjects.length === 0) {
-            // Initializing: 
-            // 1. If user is a student, use their 4 profile subjects
-            // 2. If guest/admin, find English and pick 3 other available subjects
-            let initial: string[] = [];
+        if (allSubjectsFromPapers.length > 0 && selectedStandardSubjects.length === 0 && subjects.length > 0) {
+            // Initializing selection:
+            // 1. If user is a student, their 'subjects' list is already filtered to their 4 preferred ones. We auto-select them all.
+            // 2. If guest/admin, they see all 20 subjects. We leave selection empty so they manually pick 4.
             
             if (user && !isAdmin) {
-                // Student: Fixed to profile
-                const preferenceKeys = user.preferredSubjects.map(s => getSubjectKey(s));
-                initial = allSubjectsFromPapers.filter(s => {
-                    const key = getSubjectKey(s);
-                    return key === 'english' || preferenceKeys.includes(key);
-                });
+                // Student: Fixed to profile. Auto-select the 4 available subjects so the Start button is enabled.
+                setSelectedStandardSubjects([...subjects]);
             } else {
-                // Guest or Admin: Pick English + first 3
-                const english = allSubjectsFromPapers.find(s => ['english', 'english language', 'use of english'].includes(s.toLowerCase()));
-                if (english) {
-                    initial.push(english);
-                    const others = allSubjectsFromPapers.filter(s => s !== english).slice(0, 3);
-                    initial.push(...others);
-                } else {
-                    initial = allSubjectsFromPapers.slice(0, 4);
-                }
+                // Guest or Admin: DO NOT pre-select. Let them click their desired 4 subjects.
+                setSelectedStandardSubjects([]);
             }
-            setSelectedStandardSubjects(initial);
         }
-    }, [allSubjectsFromPapers, user, isAdmin]);
+    }, [allSubjectsFromPapers, user, isAdmin, subjects]);
 
     useEffect(() => {
         const fetchPublicMeta = async () => {
