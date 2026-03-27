@@ -425,8 +425,8 @@ const UtmeChallenge: React.FC = () => {
                                 <div className="space-y-2">
                                     <p className="font-bold text-blue-100 uppercase tracking-widest text-[10px]">How Ranking Works</p>
                                     <ul className="space-y-1.5 list-disc list-inside text-blue-50 opacity-90">
-                                        <li>Currently ranked by your <strong>Estimated Score</strong> (Challenge performance + Study activity).</li>
-                                        <li>Final winners are determined by <strong>Actual UTME Results</strong> after verification.</li>
+                                        <li>Ranked by your highest score in the **UTME Challenge**.</li>
+                                        <li>Top performers on the leaderboard are eligible for prizes.</li>
                                     </ul>
                                 </div>
                                 <div className="space-y-2">
@@ -470,10 +470,10 @@ const UtmeChallenge: React.FC = () => {
                                     </div>
                                 </div>
                                 <div className="text-right">
-                                    <div className="text-xl font-black text-primary leading-none">
-                                        {entry.estimatedScore || Math.round((entry.score / entry.totalQuestions) * 400)}
+                                    <div className="text-2xl font-black text-primary leading-none">
+                                        {entry.score}
                                     </div>
-                                    <div className="text-[9px] text-slate-500 font-bold uppercase">Est. UTME Score</div>
+                                    <div className="text-[10px] text-slate-500 font-bold uppercase">Points / {entry.totalQuestions}</div>
                                 </div>
                             </li>
                         ))}
