@@ -6,8 +6,8 @@ import { getCache, setCache } from '../services/db.ts';
 // Cache keys used in IndexedDB
 // Cache keys used in IndexedDB - Bumping version to force fresh fetch after coupling
 // Cache keys used in IndexedDB - Bumping version to force fresh fetch after gating/monetization
-const CACHE_KEY_PAPERS = 'papers_v15';
-const CACHE_KEY_GUIDES = 'guides_v15';
+const CACHE_KEY_PAPERS = 'papers_v16';
+const CACHE_KEY_GUIDES = 'guides_v16';
 
 interface PastQuestionsContextType {
     papers: PastPaper[];

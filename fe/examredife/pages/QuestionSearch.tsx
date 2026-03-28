@@ -435,6 +435,12 @@ const QuestionSearch: React.FC = () => {
                                                         <div className="text-green-800 dark:text-green-200 text-sm">
                                                             <MarkdownRenderer content={highlightQuery(q.options[q.answer]?.text || '', query)} />
                                                         </div>
+                                                        {(q.explanation || (q as any).solution) && (
+                                                            <div className="mt-4 pt-4 border-t border-green-200 dark:border-green-800 text-green-900 dark:text-green-100 text-sm">
+                                                                <p className="font-bold mb-1 uppercase text-xs tracking-wider opacity-60">Explanation</p>
+                                                                <MarkdownRenderer content={highlightQuery(q.explanation || (q as any).solution, query)} />
+                                                            </div>
+                                                        )}
                                                     </div>
                                                 </details>
                                             </Card>

@@ -866,10 +866,10 @@ const TakeExamination: React.FC = () => {
                                         </div>
                                     )}
 
-                                    {((isFinished && mode !== 'mock') || (mode === 'study' && showAnswer)) && currentQuestion.explanation && (
+                                    {((isFinished && mode !== 'mock') || (mode === 'study' && showAnswer)) && (currentQuestion.explanation || (currentQuestion as any).solution) && (
                                         <div className="bg-blue-50 border-l-4 border-blue-400 p-4 mb-6 animate-in fade-in slide-in-from-top-2 duration-300">
                                             <p className="text-sm font-bold text-blue-800 uppercase tracking-wider mb-1">Explanation</p>
-                                            <div className="text-blue-900"><MarkdownRenderer content={currentQuestion.explanation} forceLightMode={true} /></div>
+                                            <div className="text-blue-900"><MarkdownRenderer content={currentQuestion.explanation || (currentQuestion as any).solution} forceLightMode={true} /></div>
                                         </div>
                                     )}
 

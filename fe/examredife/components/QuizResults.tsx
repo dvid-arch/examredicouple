@@ -45,7 +45,7 @@ const QuizResults: React.FC<QuizResultsProps> = ({
     }, [topicBreakdown]);
 
     return (
-        <div className="min-h-full bg-slate-50 dark:bg-slate-950 p-4 sm:p-8 flex items-center justify-center animate-in fade-in duration-500">
+        <div className="min-h-[100dvh] overflow-y-auto w-full bg-slate-50 dark:bg-slate-950 p-4 sm:p-8 flex flex-col items-center justify-start sm:justify-center animate-in fade-in duration-500">
             <div className="max-w-4xl w-full space-y-8 pb-12">
 
                 {/* Hero Card: Celebratory Reveal */}
