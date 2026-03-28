@@ -48,7 +48,7 @@ const preparePracticeQuestions = (
         }
 
         let questionsForSubject = papersForSubject
-            .flatMap(paper => paper.questions)
+            .reduce((acc, paper) => acc.concat(paper.questions), [] as any[])
             .map(q => ({ ...q, subject }));
 
         if (keyword) {

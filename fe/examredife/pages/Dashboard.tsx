@@ -13,6 +13,7 @@ import { StudyGuide, LeaderboardScore } from '../types.ts';
 import OnboardingSubjectModal from '../components/OnboardingSubjectModal.tsx';
 import { useReturningUser } from '../hooks/useReturningUser.ts';
 import apiService from '../services/apiService.ts';
+import VideoModal from '../components/VideoModal.tsx';
 
 // FIX: Changed icon components to accept props to allow className to be passed via React.cloneElement.
 const PracticeIcon = (props: React.ComponentProps<"svg">) => <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" {...props}><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>;
@@ -73,6 +74,18 @@ const WelcomeBanner = () => {
     const { isAuthenticated, user } = useAuth();
     const isReturning = useReturningUser();
     const { streak, estimatedScore } = useUserProgress();
+    const [isVideoOpen, setIsVideoOpen] = useState(false);
+    const [hasWatchedVideo, setHasWatchedVideo] = useState(true); // Default true to avoid flash
+
+    useEffect(() => {
+        setHasWatchedVideo(localStorage.getItem('examRediWatchedWelcomeVideo') === 'true');
+    }, []);
+
+    const handleVideoClose = () => {
+        setIsVideoOpen(false);
+        setHasWatchedVideo(true);
+        localStorage.setItem('examRediWatchedWelcomeVideo', 'true');
+    };
 
     // Calculate percentage for progress circle (400 is max score)
     const scorePercentage = (estimatedScore / 400) * 100;
@@ -131,15 +144,27 @@ const WelcomeBanner = () => {
                     )}
                 </div>
 
-                <div className="mt-6 sm:mt-8 flex flex-col sm:flex-row gap-3">
+                <div className="mt-6 sm:mt-8 flex flex-col sm:flex-row flex-wrap gap-3">
                     <Link to="/practice" className="bg-white text-primary text-center font-bold py-3 px-8 rounded-lg hover:bg-blue-50 transition-all duration-200 shadow-sm hover:shadow-md w-full sm:w-auto">
                         Start Practice
                     </Link>
                     <Link to="/question-search" className="bg-primary-dark/30 text-white text-center border border-white/20 font-semibold py-3 px-8 rounded-lg hover:bg-primary-dark/50 transition-all duration-200 w-full sm:w-auto">
                         See Past Questions
                     </Link>
+                    {!hasWatchedVideo && (
+                        <button onClick={() => setIsVideoOpen(true)} className="bg-red-600/90 text-white text-center border border-red-500/20 font-bold py-3 px-8 rounded-lg hover:bg-red-600 transition-all duration-200 w-full sm:w-auto flex items-center justify-center gap-2 shadow-md">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.5 12 3.5 12 3.5s-7.505 0-9.377.55a3.016 3.016 0 0 0-2.122 2.136C0 8.059 0 12 0 12s0 3.941.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.55 9.376.55 9.376.55s7.505 0 9.377-.55a3.016 3.016 0 0 0 2.122-2.136C24 15.941 24 12 24 12s0-3.941-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+                            Watch Tutorial
+                        </button>
+                    )}
                 </div>
             </div>
+            
+            <VideoModal 
+                isOpen={isVideoOpen} 
+                onClose={handleVideoClose} 
+                videoId="OVW96L5EjhQ" 
+            />
         </div>
     );
 };

@@ -81,7 +81,7 @@ const QuestionSearch: React.FC = () => {
             fetchGuides();
             try {
                 const metadata = await apiService<any[]>('/public/subjects');
-                const years = [...new Set(metadata.flatMap(s => s.years))].sort((a, b) => b - a);
+                const years = [...new Set<number>(metadata.reduce((acc, s) => acc.concat(s.years), [] as number[]))].sort((a, b) => b - a);
                 setPublicYears(years);
             } catch (e) {
                 console.error("Failed to fetch public years:", e);

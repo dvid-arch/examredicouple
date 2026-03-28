@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { usePwaInstall } from '../contexts/PwaContext.tsx';
 import { useAuth } from '../contexts/AuthContext.tsx';
 import { useReturningUser } from '../hooks/useReturningUser.ts';
+import VideoModal from '../components/VideoModal.tsx';
 
 const Logo = () => (
     <div className="flex items-center space-x-2">
@@ -85,6 +86,7 @@ const FeatureCard: React.FC<{ title: string; description: string; icon: React.Re
 const LandingPage: React.FC = () => {
     const isReturning = useReturningUser();
     const { isAuthenticated } = useAuth();
+    const [isVideoOpen, setIsVideoOpen] = useState(false);
 
     return (
         <div className="bg-slate-50 min-h-screen">
@@ -99,20 +101,24 @@ const LandingPage: React.FC = () => {
                         <p className="mt-4 sm:mt-6 text-base sm:text-lg md:text-xl text-slate-600 max-w-3xl mx-auto">
                             ExamRedi provides everything you need to succeed. From interactive practice sessions and AI tutors to dynamic study guides and educational games.
                         </p>
-                        <div className="mt-8 sm:mt-10">
+                        <div className="mt-8 sm:mt-10 flex flex-col sm:flex-row justify-center items-center gap-4">
                             {isAuthenticated ? (
-                                <Link to="/dashboard" className="bg-primary text-white font-black py-3.5 px-8 sm:py-4 sm:px-10 rounded-2xl text-base sm:text-lg hover:bg-accent transition-all hover:scale-105 inline-block shadow-xl shadow-primary/20">
+                                <Link to="/dashboard" className="bg-primary text-white font-black py-3.5 px-8 sm:py-4 sm:px-10 rounded-2xl text-base sm:text-lg hover:bg-accent transition-all hover:scale-105 inline-block shadow-xl shadow-primary/20 w-full sm:w-auto">
                                     Go to My Dashboard
                                 </Link>
                             ) : isReturning ? (
-                                <Link to="/login" className="bg-primary text-white font-black py-3.5 px-8 sm:py-4 sm:px-10 rounded-2xl text-base sm:text-lg hover:bg-accent transition-all hover:scale-105 inline-block shadow-xl shadow-primary/20">
+                                <Link to="/login" className="bg-primary text-white font-black py-3.5 px-8 sm:py-4 sm:px-10 rounded-2xl text-base sm:text-lg hover:bg-accent transition-all hover:scale-105 inline-block shadow-xl shadow-primary/20 w-full sm:w-auto">
                                     Continue My Progress
                                 </Link>
                             ) : (
-                                <Link to="/register" className="bg-primary text-white font-bold py-3.5 px-8 sm:py-4 sm:px-10 rounded-lg text-base sm:text-lg hover:bg-accent transition-transform hover:scale-105 inline-block">
+                                <Link to="/register" className="bg-primary text-white font-bold py-3.5 px-8 sm:py-4 sm:px-10 rounded-lg text-base sm:text-lg hover:bg-accent transition-transform hover:scale-105 inline-block w-full sm:w-auto">
                                     Start Studying for Free
                                 </Link>
                             )}
+                            <button onClick={() => setIsVideoOpen(true)} className="bg-white text-red-600 border-2 border-red-100 font-bold py-3.5 px-8 sm:py-4 sm:px-10 rounded-lg text-base sm:text-lg hover:bg-red-50 hover:border-red-200 transition-all hover:scale-105 inline-flex items-center justify-center gap-2 w-full sm:w-auto shadow-sm cursor-pointer">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="currentColor" viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.5 12 3.5 12 3.5s-7.505 0-9.377.55a3.016 3.016 0 0 0-2.122 2.136C0 8.059 0 12 0 12s0 3.941.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.55 9.376.55 9.376.55s7.505 0 9.377-.55a3.016 3.016 0 0 0 2.122-2.136C24 15.941 24 12 24 12s0-3.941-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+                                Watch Video
+                            </button>
                         </div>
                     </div>
                 </section>
@@ -164,7 +170,11 @@ const LandingPage: React.FC = () => {
                 {/* How It Works Section */}
                 <section className="py-20 bg-slate-100/50">
                     <div className="container mx-auto px-4 text-center">
-                        <h2 className="text-3xl md:text-5xl font-black text-slate-900 mb-16">How It Works</h2>
+                        <h2 className="text-3xl md:text-5xl font-black text-slate-900 mb-6">How It Works</h2>
+                        <button onClick={() => setIsVideoOpen(true)} className="inline-flex items-center justify-center gap-2 bg-red-600 text-white font-bold py-3 px-8 rounded-full hover:bg-red-700 transition-all hover:scale-105 mb-16 shadow-lg shadow-red-600/30 cursor-pointer">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.5 12 3.5 12 3.5s-7.505 0-9.377.55a3.016 3.016 0 0 0-2.122 2.136C0 8.059 0 12 0 12s0 3.941.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.55 9.376.55 9.376.55s7.505 0 9.377-.55a3.016 3.016 0 0 0 2.122-2.136C24 15.941 24 12 24 12s0-3.941-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+                            Watch Video Guide
+                        </button>
                         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
                             <div className="relative">
                                 <div className="w-16 h-16 bg-primary text-white text-2xl font-bold flex items-center justify-center rounded-2xl mx-auto mb-6 shadow-xl shadow-primary/30 relative z-10">1</div>
@@ -244,6 +254,13 @@ const LandingPage: React.FC = () => {
                     </div>
                 </footer>
             </main>
+
+            {/* Modal */}
+            <VideoModal 
+                isOpen={isVideoOpen} 
+                onClose={() => setIsVideoOpen(false)} 
+                videoId="OVW96L5EjhQ" 
+            />
         </div>
     );
 };

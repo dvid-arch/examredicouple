@@ -143,7 +143,7 @@ const SubjectSprintGame: React.FC = () => {
     const startGame = (subject: string) => {
         const subjectQuestions = allPapers
             .filter(p => p.subject === subject)
-            .flatMap(paper => paper.questions.map((q: any) => ({ ...q, subject })));
+            .reduce((acc, paper) => acc.concat(paper.questions.map((q: any) => ({ ...q, subject }))), [] as any[]);
 
         const gameQuestions = shuffleArray(subjectQuestions).slice(0, QUESTIONS_PER_GAME);
         setQuestions(gameQuestions);
