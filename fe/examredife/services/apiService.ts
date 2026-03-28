@@ -15,6 +15,12 @@ let failedQueue: Array<{
   reject: (error: any) => void;
 }> = [];
 
+export const clearFailedQueue = () => {
+  failedQueue.forEach(prom => prom.reject(new Error('Queue cleared manually')));
+  failedQueue = [];
+  isRefreshing = false;
+};
+
 const processQueue = (error: any, token: string | null = null) => {
   failedQueue.forEach((prom) => {
     if (error) {

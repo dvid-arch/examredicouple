@@ -14,7 +14,6 @@ export const generateRefreshToken = (id, sessionId) => {
     return jwt.sign({ id, sessionId }, process.env.JWT_SECRET, { expiresIn: '30d' });
 };
 
-// Helper: Create and store a new session, enforcing limit of 2
 export const createSession = async (user, req) => {
     const sessionId = uuidv4();
     user.activeSessions = user.activeSessions || [];
@@ -31,6 +30,7 @@ export const createSession = async (user, req) => {
         user.activeSessions.shift();
     }
 
+    user.markModified('activeSessions'); // Explicitly mark array as modified
     await user.save();
     return sessionId;
 };

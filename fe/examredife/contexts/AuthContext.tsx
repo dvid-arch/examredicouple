@@ -4,7 +4,7 @@ import AuthModal, { AuthDetails } from '../components/AuthModal.tsx';
 import UpgradeModal, { UpgradeRequest } from '../components/UpgradeModal.tsx';
 import { useToasts } from './ToastContext.tsx';
 import { User } from '../types.ts';
-import apiService from '../services/apiService.ts';
+import apiService, { clearFailedQueue } from '../services/apiService.ts';
 import { clearCache } from '../services/db.ts';
 
 // The User type from backend might be slightly different.
@@ -226,6 +226,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         localStorage.setItem('authToken', accessToken);
         localStorage.setItem('refreshToken', refreshToken);
 
+        // Clear any hanging refreshes from previous sessions that might trap our new request
+        clearFailedQueue();
+
         // Verify the login by fetching the profile
         const profile = await fetchUserProfile();
         if (!profile) {
@@ -256,6 +259,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const loginWithTokens = async (accessToken: string, refreshToken: string) => {
         localStorage.setItem('authToken', accessToken);
         localStorage.setItem('refreshToken', refreshToken);
+        clearFailedQueue();
         await fetchUserProfile();
     };
 
