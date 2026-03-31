@@ -134,6 +134,7 @@ const TakeExamination: React.FC = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [showAnswer, setShowAnswer] = useState(false);
     const [topicBreakdown, setTopicBreakdown] = useState<Record<string, { correct: number, total: number }>>({});
+    const [isReviewMode, setIsReviewMode] = useState(false);
 
     const { activeNudge, triggerNudge } = useEngagement();
     const { papers: metadataPapers, fetchFullPaper, fetchPapers } = usePastQuestions();
@@ -264,6 +265,19 @@ const TakeExamination: React.FC = () => {
             navigate('/practice', { replace: true });
         }
     }, [location.state, navigate, isFinished, validatePracticeState]);
+    
+    // Review Mode History Management
+    useEffect(() => {
+        const handlePopState = (event: PopStateEvent) => {
+            // If the user was in review mode and clicked back, exit review mode
+            if (isReviewMode) {
+                setIsReviewMode(false);
+            }
+        };
+
+        window.addEventListener('popstate', handlePopState);
+        return () => window.removeEventListener('popstate', handlePopState);
+    }, [isReviewMode]);
 
     // Check if access is valid for rendering content
     const isAccessIllegal = useMemo(() => {
@@ -680,13 +694,11 @@ const TakeExamination: React.FC = () => {
         if (isFinished) return;
 
         // Guest Limit Check:
-        if (!isAuthenticated) {
-            const isAlreadyAnswered = userAnswers[questionId] !== undefined;
-            // If trying to answer a NEW question and limit is reached
-            if (!isAlreadyAnswered && guestAnswerLimitReached) {
-                setShowLoginPrompt(true);
-                return;
-            }
+        const isAlreadyAnswered = userAnswers[questionId] !== undefined;
+        // If trying to answer a NEW question and limit is reached
+        if (!isAuthenticated && !isAlreadyAnswered && guestAnswerLimitReached) {
+            setShowLoginPrompt(true);
+            return;
         }
 
         setUserAnswers(prev => ({ ...prev, [questionId]: optionKey }));
@@ -739,7 +751,7 @@ const TakeExamination: React.FC = () => {
         );
     }
 
-    if (isFinished) {
+    if (isFinished && !isReviewMode) {
         return (
             <QuizResults
                 finalScore={finalScore}
@@ -747,6 +759,11 @@ const TakeExamination: React.FC = () => {
                 topicBreakdown={topicBreakdown}
                 isAuthenticated={isAuthenticated}
                 requestLogin={requestLogin}
+                onReview={() => {
+                    // Push a history state so back button works
+                    window.history.pushState({ isReviewing: true }, '');
+                    setIsReviewMode(true);
+                }}
             />
         );
     }
@@ -767,7 +784,12 @@ const TakeExamination: React.FC = () => {
                     </div>
                 </div>
 
-                {mode !== 'study' && (
+                {isReviewMode ? (
+                    <div className="bg-indigo-50 text-indigo-700 font-bold text-[10px] sm:text-xs uppercase tracking-[0.2em] px-3 py-1 sm:px-6 sm:py-2 rounded-full border border-indigo-100 shadow-sm whitespace-nowrap flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse"></span>
+                        Reviewing Results
+                    </div>
+                ) : mode !== 'study' && (
                     <div className="bg-orange-50 text-orange-700 font-bold text-xs sm:text-xl font-mono tracking-widest px-2 py-1 sm:px-6 sm:py-2 rounded-full border border-orange-100 shadow-sm whitespace-nowrap">
                         {formatTime(timeLeft)}
                     </div>
@@ -775,13 +797,26 @@ const TakeExamination: React.FC = () => {
 
                 <div className="relative group shrink-0">
                     <button
-                        onClick={() => { if (window.confirm('Are you sure you want to submit?')) handleSubmit(); }}
-                        disabled={!canSubmit}
+                        onClick={() => {
+                            if (isReviewMode) {
+                                // Manual "Back to Results" 
+                                window.history.back();
+                            } else if (window.confirm('Are you sure you want to submit?')) {
+                                handleSubmit();
+                            }
+                        }}
+                        disabled={!canSubmit && !isReviewMode}
                         className="bg-primary hover:bg-blue-700 text-white font-bold py-1.5 px-3 sm:py-2.5 sm:px-6 rounded-full transition-all shadow-md shadow-blue-200 hover:shadow-lg disabled:opacity-50 disabled:shadow-none disabled:cursor-not-allowed text-[10px] sm:text-base whitespace-nowrap flex items-center justify-center"
                         aria-describedby="submit-tooltip"
                     >
-                        <span className="sm:inline hidden">Finish & Submit</span>
-                        <span className="sm:hidden inline">Submit</span>
+                        {isReviewMode ? (
+                            <span>Back to Results</span>
+                        ) : (
+                            <>
+                                <span className="sm:inline hidden">Finish & Submit</span>
+                                <span className="sm:hidden inline">Submit</span>
+                            </>
+                        )}
                     </button>
                     {!canSubmit && (
                         <div id="submit-tooltip" role="tooltip" className="absolute top-full right-0 mt-3 w-max px-4 py-2 bg-gray-900 text-white text-xs font-medium rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-20 shadow-xl">
@@ -891,13 +926,13 @@ const TakeExamination: React.FC = () => {
                                                         containerClass = 'border-red-300 bg-red-50/50';
                                                         indicatorClass = 'border-red-400 text-red-500';
                                                     }
-                                                } else if (isFinished && mode !== 'mock') {
+                                                } else if ((isFinished && mode !== 'mock') || isReviewMode) {
                                                     if (isCorrect) {
-                                                        containerClass = 'border-green-500 bg-green-50/50';
+                                                        containerClass = 'border-green-500 bg-green-50/50 ring-1 ring-green-500';
                                                         indicatorClass = 'border-green-500 bg-green-500 text-white';
                                                     } else if (isSelected) {
-                                                        containerClass = 'border-red-300 bg-red-50/50';
-                                                        indicatorClass = 'border-red-400 text-red-500';
+                                                        containerClass = 'border-red-300 bg-red-50/50 ring-1 ring-red-400';
+                                                        indicatorClass = 'border-red-400 text-red-500 font-bold';
                                                     }
                                                 } else if (isSelected) {
                                                     containerClass = 'border-primary bg-blue-50/50 ring-1 ring-primary';

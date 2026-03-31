@@ -10,6 +10,7 @@ interface QuizResultsProps {
     topicBreakdown: Record<string, { correct: number, total: number }>;
     isAuthenticated: boolean;
     requestLogin: () => void;
+    onReview: () => void;
 }
 
 const QuizResults: React.FC<QuizResultsProps> = ({
@@ -17,183 +18,170 @@ const QuizResults: React.FC<QuizResultsProps> = ({
     totalQuestions,
     topicBreakdown,
     isAuthenticated,
-    requestLogin
+    requestLogin,
+    onReview
 }) => {
     const { user } = useAuth();
     const isPro = user?.subscription === 'pro' || user?.role === 'admin';
     const percentage = Math.round((finalScore / totalQuestions) * 100);
 
     const feedback = useMemo(() => {
-        if (percentage === 100) return { title: 'Mastery Achieved! 🏆', sub: "You've completely mastered this set. You're ready for the big stage!", color: 'text-green-500' };
-        if (percentage >= 80) return { title: 'Outstanding! 🌟', sub: "Excellent work. You're showing strong command of these concepts.", color: 'text-blue-500' };
-        if (percentage >= 50) return { title: 'Great Effort! 👍', sub: "You're getting there! A bit more practice on your weak spots will make you unstoppable.", color: 'text-primary' };
-        return { title: 'Keep Pushing! 💪', sub: "Every expert was once a beginner. Let's review the topics below and try again.", color: 'text-orange-500' };
+        if (percentage === 100) return { title: 'Mastery Achieved! 🏆', sub: "Perfect score! You've completely mastered this set.", color: 'text-green-500', bg: 'bg-green-50' };
+        if (percentage >= 80) return { title: 'Outstanding! 🌟', sub: "Excellent work! Your performance is top-tier.", color: 'text-blue-500', bg: 'bg-blue-50' };
+        if (percentage >= 50) return { title: 'Great Effort! 👍', sub: "You're getting there! Keep practicing to bridge those gaps.", color: 'text-primary', bg: 'bg-indigo-50' };
+        return { title: 'Keep Pushing! 💪', sub: "Every expert was once a beginner. review the failed topics and try again.", color: 'text-orange-500', bg: 'bg-orange-50' };
     }, [percentage]);
 
-    const weakestTopic = useMemo(() => {
-        let weakest = null;
-        let lowestAcc = 1.1;
-
-        for (const [name, stats] of Object.entries(topicBreakdown)) {
-            const acc = stats.correct / stats.total;
-            if (acc < lowestAcc) {
-                lowestAcc = acc;
-                weakest = name;
-            }
-        }
-        return weakest;
-    }, [topicBreakdown]);
+    const strokeDashoffset = 100 - percentage;
 
     return (
-        <div className="min-h-[100dvh] overflow-y-auto w-full bg-slate-50 dark:bg-slate-950 p-4 sm:p-8 flex flex-col items-center justify-start sm:justify-center animate-in fade-in duration-500">
-            <div className="max-w-4xl w-full space-y-8 pb-12">
+        <div className="min-h-[100dvh] overflow-y-auto w-full bg-slate-50 dark:bg-slate-950 p-4 sm:p-8 flex flex-col items-center">
+            <div className="max-w-4xl w-full space-y-6 sm:space-y-10 pb-12">
+                
+                {/* Hero Section: Score Ring */}
+                <div className={`p-8 sm:p-12 rounded-3xl text-center relative overflow-hidden bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-sm sm:shadow-md`}>
+                    <div className="relative z-10 flex flex-col items-center">
+                        <h1 className={`text-2xl sm:text-3xl font-black mb-2 ${feedback.color}`}>{feedback.title}</h1>
+                        <p className="text-slate-500 dark:text-slate-400 max-w-sm mx-auto mb-8 font-bold text-sm sm:text-base leading-relaxed">{feedback.sub}</p>
 
-                {/* Hero Card: Celebratory Reveal */}
-                <motion.div
-                    initial={{ scale: 0.9, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    transition={{ type: 'spring', damping: 20 }}
-                >
-                    <Card className="p-8 sm:p-12 text-center relative overflow-hidden">
-                        {/* Background Decoration */}
-                        <div className={`absolute top-0 left-0 w-full h-2 ${feedback.color.replace('text', 'bg')}`} />
-
-                        <div className="relative z-10">
-                            <h1 className={`text-3xl sm:text-4xl font-black mb-2 ${feedback.color}`}>{feedback.title}</h1>
-                            <p className="text-slate-600 dark:text-slate-400 max-w-md mx-auto mb-8 font-medium">{feedback.sub}</p>
-
-                            <div className="flex justify-center items-baseline gap-2 mb-8">
-                                <span className={`text-8xl sm:text-9xl font-black tracking-tighter ${feedback.color}`}>{percentage}%</span>
-                                <span className="text-2xl text-slate-400 font-bold uppercase tracking-widest">Score</span>
-                            </div>
-
-                            <div className="flex flex-wrap justify-center gap-4">
-                                <Link to="/practice" replace className="bg-slate-800 dark:bg-slate-700 text-white font-bold py-4 px-8 rounded-xl hover:bg-black transition-all shadow-xl active:scale-95">
-                                    New Practice
-                                </Link>
-                                <Link to="/performance" replace className="bg-primary text-white font-bold py-4 px-10 rounded-xl hover:bg-accent transition-all shadow-xl shadow-primary/20 active:scale-95">
-                                    Full Analysis
-                                </Link>
+                        <div className="relative w-48 h-48 sm:w-60 sm:h-60 mb-8 mt-2 flex items-center justify-center">
+                            <svg viewBox="0 0 44 44" className="w-full h-full transform -rotate-90 drop-shadow-sm">
+                                <circle cx="22" cy="22" r="18" stroke="currentColor" strokeWidth="3" fill="transparent" className="text-slate-100 dark:text-slate-800" />
+                                <motion.circle 
+                                    initial={{ strokeDashoffset: 100 }}
+                                    animate={{ strokeDashoffset: strokeDashoffset }}
+                                    transition={{ duration: 1.5, ease: "easeOut" }}
+                                    cx="22" cy="22" r="18" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" fill="transparent" 
+                                    className={`${feedback.color.replace('text', 'stroke')}`}
+                                    strokeDasharray="113.1" 
+                                />
+                            </svg>
+                            <div className="absolute inset-0 flex flex-col items-center justify-center">
+                                <span className={`text-6xl sm:text-8xl font-black tracking-tighter ${feedback.color}`}>
+                                    {percentage}<span className="text-2xl sm:text-3xl">%</span>
+                                </span>
+                                <span className="text-[10px] sm:text-xs text-slate-400 font-bold uppercase tracking-[0.2em] mt-[-5px]">Your Score</span>
                             </div>
                         </div>
 
-                        {/* Confetti-like decoration for high scores */}
-                        {percentage >= 90 && (
-                            <div className="absolute inset-0 pointer-events-none opacity-20 overflow-hidden">
-                                {[...Array(20)].map((_, i) => (
-                                    <div
-                                        key={i}
-                                        className="absolute animate-bounce"
-                                        style={{
-                                            left: `${Math.random() * 100}%`,
-                                            top: `${Math.random() * 100}%`,
-                                            animationDelay: `${Math.random() * 2}s`,
-                                            fontSize: `${Math.random() * 20 + 10}px`
-                                        }}
-                                    >
-                                        ✨
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-                    </Card>
-                </motion.div>
+                        <div className="flex flex-col sm:flex-row justify-center gap-3 w-full sm:w-auto">
+                            <Link to="/practice" replace className="bg-slate-800 dark:bg-slate-700 text-white font-bold py-3 px-8 rounded-xl hover:bg-black transition-all shadow-lg active:scale-95 text-center">
+                                New Practice
+                            </Link>
+                            <button
+                                onClick={onReview}
+                                className="bg-white dark:bg-slate-800 text-slate-800 dark:text-white font-bold py-3 px-8 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-50 transition-all shadow-lg active:scale-95 flex items-center justify-center gap-2"
+                            >
+                                <span>Review Questions</span>
+                                <span className="text-lg">📖</span>
+                            </button>
+                            <Link to="/performance" replace className="bg-primary text-white font-bold py-3 px-10 rounded-xl hover:bg-accent transition-all shadow-lg shadow-primary/20 active:scale-95 text-center">
+                                Detailed Analysis
+                            </Link>
+                        </div>
+                    </div>
+                </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
-                    {/* Left: Topic Breakdown (60%) */}
-                    <motion.div
-                        initial={{ x: -20, opacity: 0 }}
-                        animate={{ x: 0, opacity: 1 }}
-                        transition={{ delay: 0.2 }}
-                        className="lg:col-span-3 space-y-4"
-                    >
-                        <h3 className="text-xl font-bold text-slate-800 dark:text-white px-1">Detailed Breakdown</h3>
-                        <div className="grid grid-cols-1 gap-4 relative">
+                <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 sm:gap-8">
+                    {/* Topic Breakdown */}
+                    <div className="lg:col-span-3 space-y-4">
+                        <div className="flex items-center justify-between px-1">
+                            <h3 className="text-lg font-bold text-slate-800 dark:text-white">Topic Breakdown</h3>
+                            <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Performance</span>
+                        </div>
+                        
+                        <div className="grid grid-cols-1 gap-3 relative">
                             {Object.entries(topicBreakdown).sort((a, b) => (b[1].correct / b[1].total) - (a[1].correct / a[1].total)).map(([topic, stats], index) => {
                                 const acc = Math.round((stats.correct / stats.total) * 100);
                                 const isBestTopic = index === 0;
                                 const isBlurred = !isPro && !isBestTopic && Object.keys(topicBreakdown).length > 1;
+                                const badge = acc >= 90 ? { text: 'MASTERED 🏆', color: 'bg-yellow-400' } : acc >= 50 ? { text: 'GOOD 👍', color: 'bg-green-100 text-green-700' } : { text: 'RETRY 📖', color: 'bg-orange-100 text-orange-700' };
 
                                 return (
-                                    <Card
+                                    <div
                                         key={topic}
-                                        className={`p-5 border-slate-100 dark:border-slate-800 transition-all ${isBlurred ? 'opacity-40 blur-[2px] pointer-events-none' : ''}`}
+                                        className={`p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-sm transition-all flex flex-col gap-3 group relative ${isBlurred ? 'opacity-40 blur-[2px] pointer-events-none' : ''}`}
                                     >
-                                        <div className="flex justify-between items-center mb-3">
-                                            <span className="font-bold text-slate-700 dark:text-slate-200 capitalize">{topic}</span>
-                                            <span className={`font-black ${acc >= 80 ? 'text-green-500' : acc >= 50 ? 'text-primary' : 'text-orange-500'}`}>
-                                                {stats.correct} / {stats.total}
+                                        <div className="flex justify-between items-start">
+                                            <div className="min-w-0">
+                                                <h4 className="font-bold text-slate-700 dark:text-slate-200 capitalize truncate group-hover:text-primary transition-colors">{topic}</h4>
+                                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">{stats.correct} / {stats.total} Correct</p>
+                                            </div>
+                                            <span className={`text-[9px] font-black px-2 py-1 rounded-full ${badge.color}`}>
+                                                {badge.text}
                                             </span>
                                         </div>
-                                        <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-lg h-2.5 overflow-hidden">
+                                        <div className="w-full bg-slate-50 dark:bg-slate-800 rounded-full h-2 overflow-hidden shadow-inner">
                                             <motion.div
                                                 initial={{ width: 0 }}
                                                 animate={{ width: `${acc}%` }}
-                                                className={`h-full ${acc >= 80 ? 'bg-green-500' : acc >= 50 ? 'bg-primary' : 'bg-orange-500'}`}
+                                                transition={{ duration: 1, delay: 0.2 + (index * 0.1) }}
+                                                className={`h-full ${acc >= 90 ? 'bg-yellow-400' : acc >= 50 ? 'bg-primary' : 'bg-orange-500'}`}
                                             />
                                         </div>
-                                    </Card>
+                                    </div>
                                 );
                             })}
 
                             {!isPro && Object.keys(topicBreakdown).length > 1 && (
-                                <div className="absolute inset-0 top-[120px] bg-gradient-to-t from-slate-50 dark:from-slate-950 via-transparent to-transparent flex items-center justify-center p-8">
-                                    <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-2xl border border-primary/20 text-center max-w-xs transform translate-y-12">
+                                <div className="absolute inset-0 top-[140px] bg-gradient-to-t from-slate-50 dark:from-slate-950 via-slate-50/80 dark:via-slate-950/80 to-transparent flex items-center justify-center p-8 z-20">
+                                    <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-xl border border-primary/20 text-center max-w-xs transform translate-y-12">
                                         <div className="w-12 h-12 bg-primary/10 text-primary rounded-full flex items-center justify-center mx-auto mb-4">
-                                            <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-                                                <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
-                                            </svg>
+                                            <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" /></svg>
                                         </div>
-                                        <h4 className="font-bold text-slate-800 dark:text-white mb-2">Unlock Topic Breakdown</h4>
-                                        <p className="text-xs text-slate-500 mb-4">Upgrade to Pro to identify exactly where you are failing and get AI study hacks for those topics.</p>
-                                        <Link to="/settings" className="block w-full bg-primary text-white font-bold py-2 rounded-lg text-sm hover:opacity-90 transition-all">
-                                            Upgrade Now
+                                        <h4 className="font-bold text-slate-800 dark:text-white mb-2">Deep Performance Insights</h4>
+                                        <p className="text-xs text-slate-500 mb-4 font-medium leading-relaxed">Upgrade to Pro to track your performance on all topics and identify exactly where to improve.</p>
+                                        <Link to="/settings" className="block w-full bg-primary text-white font-black py-2.5 rounded-xl text-xs uppercase tracking-widest hover:scale-105 transition-all shadow-lg shadow-primary/20">
+                                            Unlock Pro
                                         </Link>
                                     </div>
                                 </div>
                             )}
                         </div>
-                    </motion.div>
+                    </div>
 
-                    {/* Right: Insights & Upsell (40%) */}
-                    <motion.div
-                        initial={{ x: 20, opacity: 0 }}
-                        animate={{ x: 0, opacity: 1 }}
-                        transition={{ delay: 0.3 }}
-                        className="lg:col-span-2 space-y-6"
-                    >
-                        <h3 className="text-xl font-bold text-slate-800 dark:text-white px-1">Recommendations</h3>
+                    {/* Right side: Insights */}
+                    <div className="lg:col-span-2 space-y-6">
+                        <div className="flex items-center gap-2 px-1">
+                            <span className="text-xl">💡</span>
+                            <h3 className="text-lg font-bold text-slate-800 dark:text-white">Smart Tip</h3>
+                        </div>
 
-                        {weakestTopic && (
-                            <Card className="p-6 bg-primary/5 border-primary/20 border-2">
-                                <div className="flex items-start gap-4 mb-4">
-                                    <div className="w-10 h-10 bg-primary text-white rounded-lg flex items-center justify-center shrink-0">
-                                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>
-                                    </div>
-                                    <div>
-                                        <h4 className="font-bold text-slate-800 dark:text-white leading-tight">Focus on {weakestTopic}</h4>
-                                        <p className="text-xs text-slate-500 mt-1 uppercase tracking-wider font-bold">Suggested Study</p>
-                                    </div>
+                        {percentage < 100 ? (
+                            <div className="bg-indigo-600 rounded-2xl p-6 text-white shadow-lg relative overflow-hidden group">
+                                <div className="absolute -right-4 -bottom-4 text-white/5 group-hover:scale-110 transition-transform">
+                                    <svg className="w-24 h-24" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2a10 10 0 100 20 10 10 0 000-20zm0 18a8 8 0 110-16 8 8 0 010 16zM11 7h2v6h-2V7zm0 8h2v2h-2v-2z" /></svg>
                                 </div>
-                                <p className="text-slate-600 dark:text-slate-400 text-sm mb-6 leading-relaxed">
-                                    Your performance on <span className="font-bold text-slate-800 dark:text-slate-200">{weakestTopic}</span> suggests a knowledge gap. Reviewing the study guide could help bridge this.
+                                <h4 className="font-bold mb-2 text-lg">Next Step</h4>
+                                <p className="text-blue-50 text-xs sm:text-sm mb-6 font-medium leading-relaxed">
+                                    Your scores show a few areas that need focus. Reviewing the study guides for your weakest topics will help you improve your score in the next session.
                                 </p>
-                                <Link to={`/study-guides`} className="w-full inline-block text-center bg-white dark:bg-slate-800 text-primary font-bold py-3 px-4 rounded-lg border border-primary/20 hover:bg-primary hover:text-white transition-all">
-                                    Open Study Guide
+                                <Link to="/study-guides" className="block w-full bg-white text-indigo-700 font-black py-3 rounded-xl text-xs uppercase text-center hover:bg-blue-50 transition-colors shadow-sm">
+                                    Open Study Guides
                                 </Link>
-                            </Card>
+                            </div>
+                        ) : (
+                            <div className="bg-yellow-400 rounded-2xl p-6 text-yellow-950 shadow-lg shadow-yellow-400/20">
+                                <h4 className="font-black mb-2 text-lg uppercase tracking-tight">Master Level reached!</h4>
+                                <p className="text-yellow-900 text-xs sm:text-sm mb-6 font-bold leading-relaxed">
+                                    You've completely aced this set. You're showing consistent mastery. Why not try a full mock exam to test your stamina?
+                                </p>
+                                <Link to="/practice" className="block w-full bg-yellow-950 text-white font-black py-3 rounded-xl text-xs uppercase text-center shadow-md">
+                                    Try Mock Exam
+                                </Link>
+                            </div>
                         )}
 
                         {!isAuthenticated && (
-                            <Card className="p-6 bg-slate-800 text-white">
-                                <h4 className="font-bold mb-2">Save this result?</h4>
-                                <p className="text-slate-400 text-xs mb-6">Log in to track this score and earn mastery trophies for your performance dashboard.</p>
-                                <button onClick={requestLogin} className="w-full bg-white text-slate-800 font-bold py-3 rounded-lg hover:bg-slate-100 transition-all">
+                            <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl p-6 shadow-sm">
+                                <h4 className="font-bold text-slate-800 dark:text-white mb-2">Save your progress</h4>
+                                <p className="text-slate-500 text-xs mb-6 font-medium leading-relaxed">Login to track your scores, earn trophies, and see your rank on the national leaderboard.</p>
+                                <button onClick={requestLogin} className="w-full bg-primary/10 text-primary font-bold py-3 rounded-xl text-sm border border-primary/10 hover:bg-primary hover:text-white transition-all">
                                     Login to Save
                                 </button>
-                            </Card>
+                            </div>
                         )}
-                    </motion.div>
+                    </div>
                 </div>
             </div>
         </div>
