@@ -33,10 +33,11 @@ const UpgradeModal: React.FC<UpgradeModalProps> = ({ isOpen, onClose, request })
     const handleUpgrade = () => {
         const phoneNumber = "2349031608725"; // Updated WhatsApp number
         const selectedPlanName = 'Lifetime Access (₦2,000)';
-        const message = `Hi ExamRedi, I would like to upgrade my account to the ${selectedPlanName}. My email is ${user?.email || 'not provided'}.`;
+        const message = `Hi ExamRedi, I would like to upgrade my account to ${selectedPlanName}.\n\nMy Email: ${user?.email || 'not provided'}\n\nTo save time, I am ready to pay to the account below:\nBank: OPay\nAccount: 9031608725\nName: Owoidigheabasi Friday Emmanuel\n\nI will send the proof of payment shortly. Please upgrade me to Pro once confirmed. Thank you!`;
         const encodedMessage = encodeURIComponent(message);
         window.open(`https://wa.me/${phoneNumber}?text=${encodedMessage}`, '_blank');
     };
+
 
     const defaultRequest: UpgradeRequest = {
         title: 'Get Lifetime Access',
@@ -105,6 +106,25 @@ const UpgradeModal: React.FC<UpgradeModalProps> = ({ isOpen, onClose, request })
                             </li>
                         ))}
                     </ul>
+
+                    {/* Payment Details */}
+                    <div className="mb-8 p-4 rounded-xl border border-dashed border-slate-700 bg-slate-800/30">
+                        <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3 text-center">Direct Payment Details</h4>
+                        <div className="space-y-2">
+                            <div className="flex justify-between items-center text-sm">
+                                <span className="text-slate-400">Bank:</span>
+                                <span className="text-white font-bold">OPay</span>
+                            </div>
+                            <div className="flex justify-between items-center text-sm">
+                                <span className="text-slate-400">Account:</span>
+                                <span className="text-indigo-400 font-mono font-bold tracking-wider">9031608725</span>
+                            </div>
+                            <div className="flex justify-between items-start text-sm gap-4">
+                                <span className="text-slate-400 whitespace-nowrap">Name:</span>
+                                <span className="text-white font-semibold text-right leading-tight">Owoidigheabasi Friday Emmanuel</span>
+                            </div>
+                        </div>
+                    </div>
 
                     {/* CTA */}
                     <button
