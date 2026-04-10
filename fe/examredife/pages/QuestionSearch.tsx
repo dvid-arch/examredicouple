@@ -81,8 +81,10 @@ const QuestionSearch: React.FC = () => {
             fetchGuides();
             try {
                 const metadata = await apiService<any[]>('/public/subjects');
-                const years = [...new Set<number>(metadata.reduce((acc, s) => acc.concat(s.years), [] as number[]))].sort((a, b) => b - a);
-                setPublicYears(years);
+                if (Array.isArray(metadata)) {
+                    const years = [...new Set<number>(metadata.reduce((acc, s) => acc.concat(s.years || []), [] as number[]))].sort((a, b) => b - a);
+                    setPublicYears(years);
+                }
             } catch (e) {
                 console.error("Failed to fetch public years:", e);
             }
@@ -100,7 +102,7 @@ const QuestionSearch: React.FC = () => {
             return allSubjects;
         }
 
-        const preferredKeys = user.preferredSubjects.map(s => getSubjectKey(s)).filter(Boolean);
+        const preferredKeys = (user?.preferredSubjects || []).map(s => getSubjectKey(s)).filter(Boolean);
         return allSubjects.filter(s => {
             const paperKey = getSubjectKey(s);
             if (!paperKey) return false;
@@ -129,7 +131,7 @@ const QuestionSearch: React.FC = () => {
                 : rawResults.filter(r => {
                       const paperKey = getSubjectKey(r.subject);
                       if (!paperKey) return false;
-                      const preferredKeys = user.preferredSubjects!.map(s => getSubjectKey(s)).filter(Boolean);
+                      const preferredKeys = (user?.preferredSubjects || []).map(s => getSubjectKey(s)).filter(Boolean);
                       return paperKey === 'english' || preferredKeys.includes(paperKey);
                   });
 
@@ -145,7 +147,7 @@ const QuestionSearch: React.FC = () => {
                 : rawGuides.filter(g => {
                       const guideKey = getSubjectKey(g.subject);
                       if (!guideKey) return false;
-                      const preferredKeys = user.preferredSubjects!.map(s => getSubjectKey(s)).filter(Boolean);
+                      const preferredKeys = (user?.preferredSubjects || []).map(s => getSubjectKey(s)).filter(Boolean);
                       return guideKey === 'english' || preferredKeys.includes(guideKey);
                   });
 
@@ -348,7 +350,7 @@ const QuestionSearch: React.FC = () => {
                                     </button>
                                     {expandedPaperId === paper.id && (
                                         <div className="p-5 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-100 dark:border-slate-800 space-y-6">
-                                            {paper.questions.map((q, idx) => (
+                                            {(paper.questions || []).map((q, idx) => (
                                                 <div key={q.id} className="space-y-4 border-b border-slate-200 dark:border-slate-700 pb-6 last:border-0 last:pb-0">
                                                     <div className="font-bold text-xs text-slate-400">QUESTION {idx + 1}</div>
                                                     <QuestionRenderer question={q} className="text-slate-800 dark:text-slate-200" />
@@ -365,7 +367,7 @@ const QuestionSearch: React.FC = () => {
                                                                 <span className="font-bold text-green-700 dark:text-green-400 text-sm">Correct Answer</span>
                                                             </div>
                                                             <div className="text-green-800 dark:text-green-200 text-sm">
-                                                                <MarkdownRenderer content={q.options[q.answer]?.text || ''} />
+                                                                <MarkdownRenderer content={q.options?.[q.answer]?.text || ''} />
                                                             </div>
                                                         </div>
                                                     </details>

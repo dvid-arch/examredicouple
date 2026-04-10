@@ -42,7 +42,7 @@ const QuestionPage: React.FC = () => {
                 }
             } catch (err: any) {
                 console.error("Error fetching question:", err);
-                setError("Question not found or server error.");
+                setError(err.message || "An unexpected error occurred while loading this question.");
             } finally {
                 setLoading(false);
             }
@@ -63,9 +63,11 @@ const QuestionPage: React.FC = () => {
     if (error || !question) {
         return (
             <div className="flex flex-col items-center justify-center min-h-[60vh] p-4 text-center">
-                <div className="text-4xl mb-4">🔍</div>
-                <h2 className="text-2xl font-bold text-slate-800 mb-2">Question Not Found</h2>
-                <p className="text-slate-600 mb-6">We couldn't find the question you're looking for.</p>
+                <div className="text-4xl mb-4">{error?.includes('locked') ? '🔒' : '🔍'}</div>
+                <h2 className="text-2xl font-bold text-slate-800 mb-2">
+                    {error?.includes('locked') ? 'Premium Feature Locked' : 'Question Not Found'}
+                </h2>
+                <p className="text-slate-600 mb-6">{error || "We couldn't find the question you're looking for."}</p>
                 <Link to="/dashboard" className="bg-primary text-white px-6 py-2 rounded-lg font-bold">
                     Go to Dashboard
                 </Link>

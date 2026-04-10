@@ -301,17 +301,24 @@ export const searchPapers = async (req, res) => {
 };
 
 // @desc    Get a single question by ID
-// @route   GET /api/data/question/:id
 export const getQuestionById = async (req, res) => {
     try {
         const { id } = req.params;
-        const paper = await Paper.findOne({ 'questions.id': id }).lean();
+        
+        // Use case-insensitive regex for the ID lookup in MongoDB
+        const idRegex = new RegExp('^' + id.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '$', 'i');
+        const paper = await Paper.findOne({ 'questions.id': idRegex }).lean();
 
         if (!paper) {
             return res.status(404).json({ message: 'Question not found' });
         }
 
-        const question = paper.questions.find(q => q.id === id);
+        // Also case-insensitive find in the array
+        const question = paper.questions.find(q => q.id.toLowerCase() === id.toLowerCase());
+
+        if (!question) {
+            return res.status(404).json({ message: 'Question not found in paper' });
+        }
 
         const isPro = req.user?.subscription === 'pro' || req.user?.role === 'admin';
         const isAdmin = req.user?.role === 'admin';
@@ -325,13 +332,16 @@ export const getQuestionById = async (req, res) => {
             exam: paper.exam
         };
 
+        // Improved restriction logic
         if (!isPro) {
-                        delete result.explanation;
-                        result.isLocked = paper.year !== 2024;
-                    } else if (!isAdmin && paper.year >= userLicenseYear) {
-                        delete result.explanation;
-                        result.isLocked = true;
-                    } else if (req.user?.role !== 'admin' && paper.year >= (req.user?.licenseYear || new Date().getFullYear())) {
+            // Free users only get 2024 questions
+            delete result.explanation;
+            result.isLocked = paper.year !== 2024;
+        } else if (isAdmin) {
+            // Admins see everything
+            result.isLocked = false;
+        } else if (paper.year >= userLicenseYear) {
+            // Pro users are limited by their signup year for new papers
             delete result.explanation;
             result.isLocked = true;
         }
